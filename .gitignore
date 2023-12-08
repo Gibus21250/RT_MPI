@@ -1,2 +1,5 @@
 *.o
 exec
+start
+.vs
+.vscode
