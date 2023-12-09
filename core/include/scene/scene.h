@@ -9,15 +9,14 @@ enum ModelType {
     SPHERE
 };
 
-typedef struct
-{
+typedef struct ModelsArray {
     void* tab;
     unsigned int nb;
     unsigned int max;
 } ModelsArray;
 
 
-typedef struct {
+typedef struct Scene {
     ModelsArray spheres;
 } Scene;
 

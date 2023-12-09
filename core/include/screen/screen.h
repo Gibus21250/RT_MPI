@@ -6,8 +6,7 @@
 #include "math/vector.h"
 #include "scene/camera.h"
 
-typedef struct
-{
+typedef struct Screen {
     Color *screen;
     unsigned int l, L;
 } Screen;

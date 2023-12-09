@@ -3,7 +3,7 @@
 
 #include "math/vector.h"
 
-typedef struct
+typedef struct Camera
 {
     Vector position;
     Vector lookAt;

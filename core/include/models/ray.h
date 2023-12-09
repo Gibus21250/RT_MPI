@@ -4,7 +4,7 @@
 #include "math/vector.h"
 #include "sphere.h"
 
-typedef struct {
+typedef struct Ray {
     Vector o;
     Vector v;
 } Ray;

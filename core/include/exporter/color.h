@@ -1,7 +1,7 @@
 #ifndef COLOR_H
 #define COLOR_H
 
-typedef struct {
+typedef struct Color {
     float r, g, b;
 } Color;
 

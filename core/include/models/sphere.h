@@ -4,7 +4,7 @@
 #include "math/vector.h"
 #include "exporter/color.h"
 
-typedef struct {
+typedef struct Sphere {
     Color color;
     float r;
     Vector center;
