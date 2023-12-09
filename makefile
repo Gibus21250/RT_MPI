@@ -15,7 +15,7 @@ SOURCES := $(wildcard $(CORE_SRC)/**/*.c $(CORE_SRC)/*.c)
 #Convertir en binaire dans build
 OBJECTS := $(patsubst $(CORE_SRC)/%.c, $(BUILD_DIR)/%.o, $(SOURCES))
 
-all: dirs $(BUILD_DIR)/$(CORE_LIB_NAME) $(BIN_DIR)/start
+all: dirs $(BUILD_DIR)/$(CORE_LIB_NAME) start
 
 dirs: $(BUILD_DIR) $(BIN_DIR)
 
