@@ -20,7 +20,7 @@ double intersectSphere(Ray *r, Sphere *sphere)
     double delta = b*b - 4*a*c;
 
     if(delta >=0)
-        return (-b - sqrt(delta) / 2.0 * a);
+        return ((-b + sqrt(delta)) / (2.0 * a));
     else
         return -1.0;
 }
