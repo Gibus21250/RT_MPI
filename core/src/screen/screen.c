@@ -14,22 +14,43 @@
 void draw(Screen* screen, Camera *camera, Scene *scene)
 {
 
-    //On va lancer un rayon depuis chaque pixel de l'écran
-    for (unsigned int i = 0; i < screen->l; i++)
-    {
-        for (unsigned int j = 0; j < screen->L; ++j)
-        {
-            
-            // Calcul des coordonnées normalisées du pixel sur l'écran
-            double x_normalized = (2.0 * j - screen->L) / screen->L;
-            double y_normalized = (2.0 * i - screen->l) / screen->l;
+    //Calcule du biais (pour lancer le rayon au centre du pixel, au lieu d'un coin)
+    double biaisx = (double) 1 / screen->L;
+    double biaisy = (double) 1 / screen->l;
 
-            Ray ray = {{x_normalized, y_normalized, 0}, {0, 0, 1}};
-            screen->screen[i * screen->L + j] = launchRay(scene, &ray);
+    printf("%lf %lf\n", biaisx, biaisy);
+    //On va lancer un rayon depuis chaque pixel de l'écran
+    //Toute les lignes
+    for (unsigned int i = 0; i < screen->L; i++)
+    {
+        //Toutes les colonnes de chaque ligne
+        for (unsigned int j = 0; j < screen->l; ++j)
+        {
+            // Calcul des coordonnées normalisées du pixel sur l'écran
+
+            double xEcran = 2 * ((double) j / (double) screen->l) - 1;
+            double yEcran = 1 - 2 * ((double) i / (double) screen->L);
+
+            Ray ray = {{xEcran + biaisx, yEcran - biaisy, 0}, {0, 0, 1}};
+
+            screen->screen[i * screen->l + j] = launchRay(scene, &ray);
         }
     }
     
 }
+
+
+
+
+
+
+/*
+
+
+double x_normalized = pixelsx + (2.0 * j - screen->L) / screen->L;
+            double y_normalized = pixelsy + (2.0 * i - screen->l) / screen->l;
+
+*/
 
 void showResult(Screen *screen)
 {
