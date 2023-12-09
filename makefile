@@ -12,7 +12,7 @@ CFLAGS = -Wall -Wextra -g -I$(CORE_INCLUDE)
 #Prendre tous les fichier sources de core
 SOURCES := $(wildcard $(CORE_SRC)/**/*.c $(CORE_SRC)/*.c)
 
-#Convertir en binaire dans bin
+#Convertir en binaire dans build
 OBJECTS := $(patsubst $(CORE_SRC)/%.c, $(BUILD_DIR)/%.o, $(SOURCES))
 
 all: dirs $(BUILD_DIR)/$(CORE_LIB_NAME) start
@@ -29,6 +29,7 @@ $(BIN_DIR):
 $(BUILD_DIR)/$(CORE_LIB_NAME): $(OBJECTS)
 	ar rcs $@ $(OBJECTS)
 
+#build les .o en respectant l'arborescence de src
 $(BUILD_DIR)/%.o: $(CORE_SRC)/%.c
 	mkdir -p $(@D)
 	$(CC) $(CFLAGS) -c $< -o $@
