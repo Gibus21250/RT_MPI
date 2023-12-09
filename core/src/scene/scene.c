@@ -39,7 +39,7 @@ Color launchRay(Scene *scene, Ray *ray)
     {
         double tTmp = intersectSphere(ray, &((Sphere*) sphereArray->tab)[i]);
         //printf("%lf\n", tTmp);
-        if(tTmp != -1)
+        if(tTmp != -1 && tTmp >= 0)
         {
             //printf("Colision!\n", tTmp);
             //Colision
