@@ -10,20 +10,42 @@
 
 int main(int argc, char const **argv)
 {
-    Screen ecran = {NULL, 1024, 1024};
+    Screen ecran = {NULL, 4096, 4096};
     Scene scene;
-    Camera camera = {{0, 0, 0}, {1, 0, 0}, {0, 1, 0}};
+
+    Camera perspCam = {
+        .type = PERSPECTIVE, 
+        .projection = {
+            .perspective = {
+                .position = {5, 5, -5},
+                .lookAt = {0, 0, 0},
+                .up = {0, 1, 0}
+            }
+        }
+    };
+
+    Camera cameraPar = {
+        .type = PARALLEL,
+        .projection = {
+            .parallel = {
+                .direction = {0, 0, 1},
+                .up = {0, 1, 0}
+            }
+        }
+    };
 
     initScreen(&ecran);
     initScene(&scene);
 
-    Sphere test = {{0.4, 0.5, 0.8}, 0.5, {0, 1, 1}};
-    Sphere test2 = {{0.8, 0.1, 0.4}, 1, {0, 0, 3}};
+    Sphere test = {{0.4, 0.5, 0.8}, 0.5, {0, 0.1, 0.9}}; //bleu
+    Sphere test2 = {{0.8, 0.1, 0.4}, 0.2, {-0.5, 0.5, 1}}; //rose
+    Sphere test3 = {{0.1, 0.1, 0.4}, 0.2, {0.5, 0.5, 1}}; //rose
 
     addModel(&scene, &test);
     addModel(&scene, &test2);
+    addModel(&scene, &test3);
 
-    draw(&ecran, &camera, &scene);
+    draw(&ecran, &perspCam, &scene);
     //showResult(&ecran);
     
     savePPMP6(ecran.screen, ecran.l, ecran.L, "premier6.ppm");
