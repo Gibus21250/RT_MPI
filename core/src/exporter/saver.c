@@ -19,9 +19,9 @@ char savePPMP6(Color *image, unsigned int l, unsigned int L, char *name)
             for (unsigned int j = 0; j < L; ++j)
             {
                 //On récupère en valuer [0;255] la couleur
-                unsigned char r = (unsigned char)(image[i * L + j].r * 255.0f);
-                unsigned char g = (unsigned char)(image[i * L + j].g * 255.0f);
-                unsigned char b = (unsigned char)(image[i * L + j].b * 255.0f);
+                unsigned char r = (unsigned char)(image[i * l + j].r * 255.0f);
+                unsigned char g = (unsigned char)(image[i * l + j].g * 255.0f);
+                unsigned char b = (unsigned char)(image[i * l + j].b * 255.0f);
 
                 //Ecrire en binaire les valeur des couleurs, pour gagner en place!
                 fwrite(&r, sizeof(unsigned char), 1, pfile);
@@ -54,9 +54,9 @@ char savePPMP3(Color *image, unsigned int l, unsigned int L, char *name)
             for (unsigned int j = 0; j < L; ++j)
             {
                 //On récupère en valuer [0;255] la couleur
-                unsigned char r = (unsigned char)(image[i + L * j].r * 255.0f);
-                unsigned char g = (unsigned char)(image[i + L * j].g * 255.0f);
-                unsigned char b = (unsigned char)(image[i + L * j].b * 255.0f);
+                unsigned char r = (unsigned char)(image[i * l + j].r * 255.0f);
+                unsigned char g = (unsigned char)(image[i * l + j].g * 255.0f);
+                unsigned char b = (unsigned char)(image[i * l + j].b * 255.0f);
 
                 fprintf(pfile, "%u %u %u ", (unsigned int)r, (unsigned int)g, (unsigned int)b);
             }
