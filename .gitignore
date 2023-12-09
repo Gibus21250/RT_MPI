@@ -1,5 +1,4 @@
-*.o
-exec
 start
-.vs
 .vscode
+bin/
+build/
