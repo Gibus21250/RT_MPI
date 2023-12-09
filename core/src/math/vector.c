@@ -25,3 +25,36 @@ Vector cross(Vector *u, Vector *v)
 
 	return res;
 }
+
+Vector sub(Vector *v1, Vector *v2)
+{
+	Vector res = {
+		v1->x - v2->x,
+		v1->y - v2->y,
+		v1->z - v2->z
+	};
+
+	return res;
+}
+
+Vector add(Vector *v1, Vector *v2)
+{
+	Vector res = {
+		v1->x + v2->x,
+		v1->y + v2->y,
+		v1->z + v2->z
+	};
+
+	return res;
+}
+
+Vector mul(Vector *v1, double scal)
+{
+	Vector res = {
+		v1->x * scal,
+		v1->y * scal,
+		v1->z * scal
+	};
+
+	return res;
+}

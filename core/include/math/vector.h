@@ -20,4 +20,10 @@ void normalize(Vector *u);
  */
 Vector cross(Vector *u, Vector *v);
 
+Vector sub(Vector *v1, Vector *v2);
+
+Vector add(Vector *v1, Vector *v2);
+
+Vector mul(Vector *v1, double scal);
+
 #endif // !VECTOR_H
