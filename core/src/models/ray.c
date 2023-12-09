@@ -19,8 +19,35 @@ double intersectSphere(Ray *r, Sphere *sphere)
 
     double delta = b*b - 4*a*c;
 
-    if(delta >=0)
-        return ((-b + sqrt(delta)) / (2.0 * a));
-    else
+    if(delta < 0)
+    {   
         return -1.0;
+    }
+    else if(delta > 0)
+    {
+        double tp = (-b + sqrt(delta)) / (2.0 * a);
+        double tm = (-b - sqrt(delta)) / (2.0 * a);
+        if(tm > 0 && tp > 0)
+        {
+            return tm>tp?tp:tm;
+        }
+        else //Un des deux est négatif
+        {
+            double res = tm>tp?tm:tp;
+            if(res > 0)
+                return res;
+            else
+                return -1;
+        }
+    }
+    else //delta == 0
+    {
+        double t = -b / (2.0 * a);
+        if(t > 0)
+            return t;
+        else
+            return -1;
+    }
+    
+        
 }
