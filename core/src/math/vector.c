@@ -18,7 +18,7 @@ void normalize(Vector* u)
 Vector cross(Vector *u, Vector *v)
 {
 	Vector res = {
-		u->x * v->z - u->z * v->y,
+		u->y * v->z - u->z * v->y,
 		u->z * v->x - u->x * v->z, //J'ai échangé pour éviter de faire un -
 		u->x * v->y - u->y * v->x
 	};
