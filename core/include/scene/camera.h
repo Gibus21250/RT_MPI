@@ -3,11 +3,27 @@
 
 #include "math/vector.h"
 
-typedef struct Camera
-{
-    Vector position;
-    Vector lookAt;
-    Vector up;
+typedef struct {
+
+    enum {PERSPECTIVE, PARALLEL} type;
+
+    union 
+    {
+        struct 
+        {
+            Vector position;
+            Vector lookAt;
+            Vector up;
+        } perspective;
+
+        struct 
+        {
+            Vector direction;
+            Vector up;
+        } parallel;
+        
+    } projection;
+    
 } Camera;
 
 #endif
