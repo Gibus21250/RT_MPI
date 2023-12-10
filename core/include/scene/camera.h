@@ -19,6 +19,7 @@ typedef struct {
 
         struct 
         {
+            Vector position;
             Vector direction;
             Vector up;
         } parallel;
