@@ -48,6 +48,17 @@ double intersectSphere(Ray *r, Sphere *sphere)
         else
             return -1;
     }
-    
-        
+}
+
+Ray move(Ray *r, double t)
+{
+    Ray res = {
+        {
+        r->o.x = r->o.x + t * r->v.x,
+        r->o.y = r->o.y + t * r->v.y,
+        r->o.z = r->o.z + t * r->v.z
+        },
+        {r->v.x, r->v.y, r->v.z}
+    };
+    return res;
 }
