@@ -3,6 +3,7 @@
 
 #include "models/sphere.h"
 #include "models/ray.h"
+
 #include "scene/light.h"
 
 typedef enum {

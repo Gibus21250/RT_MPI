@@ -1,8 +1,8 @@
 #ifndef SPHERE_H
 #define SPHERE_H
 
-#include "math/vector.h"
-#include "exporter/color.h"
+#include "utils/vector.h"
+#include "utils/color.h"
 
 typedef struct Sphere {
     Color color;

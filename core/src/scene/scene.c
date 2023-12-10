@@ -1,5 +1,5 @@
 #include "scene/scene.h"
-#include "math/vector.h"
+#include "utils/vector.h"
 
 #define M_PI 3.14159265358979323846
 

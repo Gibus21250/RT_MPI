@@ -1,9 +1,10 @@
 #include "screen/screen.h"
 
-#include "exporter/color.h"
+#include "utils/color.h"
+#include "utils/vector.h"
 #include "scene/scene.h"
 #include "models/ray.h"
-#include "math/vector.h"
+
 
 #include <stddef.h>
 #include <stdlib.h>

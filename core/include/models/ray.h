@@ -1,7 +1,7 @@
 #ifndef RAY_H
 #define RAY_H
 
-#include "math/vector.h"
+#include "utils/vector.h"
 #include "sphere.h"
 
 typedef struct Ray {

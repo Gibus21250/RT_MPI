@@ -1,8 +1,8 @@
 #ifndef LIGHT_H
 #define LIGHT_H
 
-#include "math/vector.h"
-#include "exporter/color.h"
+#include "utils/vector.h"
+#include "utils/color.h"
 
 //Point light
 typedef struct PointLight

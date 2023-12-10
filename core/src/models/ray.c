@@ -1,5 +1,6 @@
 #include "models/ray.h"
-#include "math/vector.h"
+#include "utils/vector.h"
+
 #include <math.h>
 
 /**

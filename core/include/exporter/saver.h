@@ -1,7 +1,7 @@
 #ifndef SAVER_H
 #define SAVER_H
 
-#include "color.h"
+#include "utils/color.h"
 
 /**
  * Sauvegarde dans un fichier name, une image de longueur l, et largeur L

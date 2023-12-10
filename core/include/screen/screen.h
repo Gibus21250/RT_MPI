@@ -1,9 +1,10 @@
 #ifndef SCREEN_H
 #define SCREEN_H
 
-#include "exporter/color.h"
+#include "utils/color.h"
+#include "utils/vector.h"
+
 #include "scene/scene.h"
-#include "math/vector.h"
 #include "scene/camera.h"
 
 typedef struct Screen {
