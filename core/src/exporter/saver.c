@@ -13,10 +13,10 @@ char savePPMP6(Color *image, unsigned int l, unsigned int L, char *name)
         fprintf(pfile, "P6\n%u %u\n255\n", l, L);
 
         //pour chaque colonne
-        for (unsigned int i = 0; i < l; ++i)
+        for (unsigned int i = 0; i < L; ++i)
         {
             //Pour chaque ligne
-            for (unsigned int j = 0; j < L; ++j)
+            for (unsigned int j = 0; j < l; ++j)
             {
                 //On récupère en valuer [0;255] la couleur
                 unsigned char r = (unsigned char)(image[i * l + j].r * 255.0f);
@@ -48,10 +48,10 @@ char savePPMP3(Color *image, unsigned int l, unsigned int L, char *name)
         fprintf(pfile, "P3\n%u %u\n255\n", l, L);
 
         //pour chaque colonne
-        for (unsigned int i = 0; i < l; ++i)
+        for (unsigned int i = 0; i < L; ++i)
         {
             //pour chaque ligne
-            for (unsigned int j = 0; j < L; ++j)
+            for (unsigned int j = 0; j < l; ++j)
             {
                 //On récupère en valuer [0;255] la couleur
                 unsigned char r = (unsigned char)(image[i * l + j].r * 255.0f);
