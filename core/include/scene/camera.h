@@ -14,6 +14,7 @@ typedef struct {
             Vector position;
             Vector lookAt;
             Vector up;
+            double distance;
         } perspective;
 
         struct 
