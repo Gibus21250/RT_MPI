@@ -6,13 +6,13 @@
 #include "scene/camera.h"
 #include "scene/light.h"
 
-#include "exporter/color.h"
+#include "utils/color.h"
 #include "exporter/saver.h"
 
 int main(int argc, char const **argv)
 {
     //64 36 -> 16/9
-    Screen ecran = {NULL, 512, 512};
+    Screen ecran = {NULL, 480, 270};
     Scene scene;
     Color ambiant = {.2, .2, .2};
     scene.ambiant = ambiant;
@@ -24,7 +24,7 @@ int main(int argc, char const **argv)
                 .position = {0, 0, -1},
                 .lookAt = {0, 0, 1},
                 .up = {0, 1, 0},
-                .distance = 1
+                .distance = 1/(16/9.)
             }
         }
     };
@@ -39,14 +39,14 @@ int main(int argc, char const **argv)
         }
     };
 
-    PointLight light = {{0, 1, 0}, 1., {1, 1, 1}};
-    PointLight light2 = {{0, 0, 0}, 1.0, {1, 0, 0}};
-    PointLight light3 = {{0, -1, 0}, 1.0, {0, 1, 0}};
+    PointLight light = {{0, 1, 0}, 0.5, {1, 1, 1}};
+    PointLight light2 = {{0, 0, 0}, 0.2, {1, 0, 0}};
+    PointLight light3 = {{0, -1, 0}, 0.2, {0, 1, 0}};
 
     initScreen(&ecran);
     initScene(&scene);
 
-    Sphere test = {{1, 1, 1}, 0.5, {0, 0, 1}}; //bleu
+    Sphere test = {{1, 1, 1}, 0.5, {0, 0, 1}};
     Sphere test2 = {{1, 1, 1}, 0.2, {-0.5, 0.5, 1}};
     Sphere test3 = {{1, 1, 1}, 0.2, {0.5, 0.5, 1}};
 
