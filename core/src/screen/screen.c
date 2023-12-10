@@ -33,7 +33,7 @@ void draw(Screen* screen, Camera *camera, Scene *scene)
 
                 double xEcran = 2 * ((double) j / (double) screen->l) - 1;
                 double yEcran = 1 - 2 * ((double) i / (double) screen->L);
-
+                //TODO changer pour que l'écran soit construit en fonction de la direction regardé par la caméra
                 Ray ray = {{xEcran + biaisx, yEcran - biaisy, 0}, camera->projection.parallel.direction};
 
                 screen->screen[i * screen->l + j] = launchRay(scene, &ray);
@@ -55,7 +55,7 @@ void draw(Screen* screen, Camera *camera, Scene *scene)
         Vector perspective_point = add(&camera->projection.perspective.position, &view);
 
         // Distance entre la caméra et le plan de l'écran
-        double distance_to_screen = 1.0; // Ajustez selon vos besoins
+        double distance_to_screen = camera->projection.perspective.distance;
 
         for (unsigned int i = 0; i < screen->L; i++)
         {
@@ -73,8 +73,8 @@ void draw(Screen* screen, Camera *camera, Scene *scene)
 
                 Vector vdist = mul(&view, distance_to_screen);
 
+                //Direction du rayon, depuis le point de vue (position)
                 Vector ray_direction = add(&rxup, &vdist);
-
                 normalize(&ray_direction);
 
                 Ray ray = {perspective_point, ray_direction};
