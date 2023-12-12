@@ -1,7 +1,9 @@
 #include "scene/scene.h"
-#include "utils/vector.h"
 
-#define M_PI 3.14159265358979323846
+#include "utils/vector.h"
+#include "utils/math.h"
+
+
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -32,48 +34,28 @@ void destroyScene(Scene *scene)
     free(scene->lights.tab);
 }
 
-Color launchRay(Scene *scene, Ray *ray)
-{
-    
+Color drawPixel(Scene *scene, Ray *ray)
+{   
     //printf("o: %lf %lf %lf\n", ray->o.x, ray->o.y, ray->o.z);
     //printf("dir: %lf %lf %lf\n\n", ray->v.x, ray->v.y, ray->v.z);
     //Color res = {0, 0.5, 0.8};
-    Color res = {.1, .1, .1};
-    //Il faut garder une trace de ce qui a été touché, en gardant le plus proche intersecté
-    double t = DBL_MAX;
 
-    Vector hitNormal = {0, 0, 0};
-    Vector hitPoint = {0, 0, 0};
-
-    //Array des Spheres
-    ModelsArray* sphereArray = &scene->spheres;
-    //Pour chaque sphere
-    for(unsigned int i = 0; i < sphereArray->nb; ++i)
-    {
-        double tTmp = intersectSphere(ray, &((Sphere*) sphereArray->tab)[i]);
-        //printf("%lf\n", tTmp);
-        if(tTmp != -1 && tTmp >= 0)
-        {
-            //printf("Colision!\n", tTmp);
-            //Colision
-            if(tTmp < t)
-            {
-                t = tTmp;
-                Sphere *hit = &((Sphere*) sphereArray->tab)[i];
-                //Optimiser, garder une trace de qui on a touché, au lieu de calculer pour chaque hit la normal et la pos
-                res = hit->color;
-                hitPoint = move(ray, t).o;
-                hitNormal = sub(&hitPoint, &hit->center);
-                normalize(&hitNormal);
-            }
-        }
-    }
-
+    HitInfo firstHit = launchRay(scene, ray);
+    Color res = scene->sky;
     //On a notre t à l'intersection, on va calculer sa luminance en fonction des lumières
-    if(t > 0 && t != DBL_MAX)
+    if(firstHit.type != NONE)
     {
-
-        Color resLight = scene->ambiant;
+        switch (firstHit.type)
+        {
+        case SPHERE:
+            res = ((Sphere*) scene->spheres.tab)[firstHit.indice].color;
+            break;
+        default:
+            break;
+        }
+        
+        //Gerer les lumière
+        Color resLight = scene->ambiant; //== ombre
         ModelsArray* ligthArray = &scene->lights;
 
         for(unsigned int i = 0; i < ligthArray->nb; ++i)
@@ -81,15 +63,25 @@ Color launchRay(Scene *scene, Ray *ray)
 
             PointLight *pLight = &((PointLight*) scene->lights.tab)[i];
             //Vecteur PL (point -> lumière)
-            Vector toLight = sub(&pLight->position, &hitPoint);
+            Vector toLight = sub(&pLight->position, &firstHit.hitPoint);
             normalize(&toLight);
 
-            double rad = acos(dot(&hitNormal, &toLight));
+            Ray toLightRay = {firstHit.hitPoint, toLight};
+            //toLightRay = move(&toLightRay, 0.00000001);
 
-            if(rad >= 0 && rad <= M_PI)
+            /*HitInfo penombra = launchRay(scene, &toLightRay);
+
+            if(penombra.type == NONE)
             {
-                //Ajouter variation en fonction de la distance
-                double intensity = fmax(0.0, cos(rad)) * pLight->intensity;
+            }
+            */
+            double cosTheta = dot(&firstHit.hitNormal, &toLight);
+
+            if(cosTheta >= -1 && cosTheta <= M_PI_2)
+            {
+
+                //TODO Ajouter variation en fonction de la distance
+                double intensity = fmax(0.0, cosTheta) * pLight->intensity;
                 Color lightColor = multiplyColord(&pLight->color, intensity);
                 //On accumule la couleur au point d'impact
                 resLight = addColor(&resLight, &lightColor);
@@ -101,12 +93,43 @@ Color launchRay(Scene *scene, Ray *ray)
 
         res = multiplyColorc(&res, &resLight);
     }
+    
     return res;
 }
 
-char isShadowed(Scene *scene, Ray *ray)
+HitInfo launchRay(Scene *scene, Ray *ray)
 {
-    return 0;
+    
+    //On s'occupe de récupérer le premier model hit par le rayon
+    HitInfo firstHit = {NONE, -1, {0,0,0}, {0,0,0}, {0, 0, 0}};
+    double t = DBL_MAX;
+
+    //Array des Spheres
+    ModelsArray* sphereArray = &scene->spheres;
+    //Pour chaque sphere
+    for(unsigned int i = 0; i < sphereArray->nb; ++i)
+    {
+        double tTmp = intersectSphere(ray, &((Sphere*) sphereArray->tab)[i]);
+        //printf("%lf\n", tTmp);
+        if(tTmp != -1)
+        {
+            //printf("Colision!\n", tTmp);
+            //Colision
+            if(tTmp < t)
+            {
+                t = tTmp;
+                Sphere *hit = &((Sphere*) sphereArray->tab)[i];
+                firstHit.type = SPHERE;
+                firstHit.indice = i;
+                firstHit.hitPoint = move(ray, t).o;
+                firstHit.hitNormal = sub(&firstHit.hitPoint, &hit->center);
+                normalize(&firstHit.hitNormal);
+            }
+        }
+    }
+
+    return firstHit;
+   
 }
 
 void addModel(Scene *scene, Sphere *sphere)
