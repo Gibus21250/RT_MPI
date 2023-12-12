@@ -35,7 +35,7 @@ $(BUILD_DIR)/%.o: $(CORE_SRC)/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 start: main.c
-	$(MPIC) $(CFLAGS) main.c -L$(BUILD_DIR) -lcore -lm -o $(BIN_DIR)/start
+	$(MPIC) $(CFLAGS) main.c -L$(BUILD_DIR) -lcore -lSDL2 -lm -o $(BIN_DIR)/start
 
 clean:
 	rm -rf $(BUILD_DIR)/*.o $(BUILD_DIR)/$(CORE_LIB_NAME) $(BIN_DIR)/start
