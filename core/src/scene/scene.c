@@ -67,7 +67,7 @@ Color drawPixel(Scene *scene, Ray *ray)
             normalize(&toLight);
 
             Ray toLightRay = {firstHit.hitPoint, toLight};
-            //toLightRay = move(&toLightRay, 0.00000001);
+            toLightRay = move(&toLightRay, 0.00000001);
 
             /*HitInfo penombra = launchRay(scene, &toLightRay);
 
@@ -100,16 +100,19 @@ Color drawPixel(Scene *scene, Ray *ray)
 HitInfo launchRay(Scene *scene, Ray *ray)
 {
     
-    //On s'occupe de récupérer le premier model hit par le rayon
-    HitInfo firstHit = {NONE, -1, {0,0,0}, {0,0,0}, {0, 0, 0}};
+    //On s'occupe de récupérer le plus proche model hit par le rayon
+    HitInfo closestHit = {NONE, -1, {0,0,0}, {0,0,0}, {0, 0, 0}};
     double t = DBL_MAX;
 
     //Array des Spheres
     ModelsArray* sphereArray = &scene->spheres;
     //Pour chaque sphere
+    //#### comparer dist
     for(unsigned int i = 0; i < sphereArray->nb; ++i)
-    {
-        double tTmp = intersectSphere(ray, &((Sphere*) sphereArray->tab)[i]);
+    {   
+        Sphere *sphere = &((Sphere*) sphereArray->tab)[i];
+
+        double tTmp = intersectSphere(ray, sphere);
         //printf("%lf\n", tTmp);
         if(tTmp != -1)
         {
@@ -118,17 +121,18 @@ HitInfo launchRay(Scene *scene, Ray *ray)
             if(tTmp < t)
             {
                 t = tTmp;
-                Sphere *hit = &((Sphere*) sphereArray->tab)[i];
-                firstHit.type = SPHERE;
-                firstHit.indice = i;
-                firstHit.hitPoint = move(ray, t).o;
-                firstHit.hitNormal = sub(&firstHit.hitPoint, &hit->center);
-                normalize(&firstHit.hitNormal);
+
+                closestHit.type = SPHERE;
+                closestHit.indice = i;
+                closestHit.hitPoint = move(ray, t).o;
+                
+                closestHit.hitNormal = sub(&closestHit.hitPoint, &sphere->center);
+                normalize(&closestHit.hitNormal);
             }
         }
     }
 
-    return firstHit;
+    return closestHit;
    
 }
 
