@@ -24,7 +24,7 @@ double intersectSphere(Ray *r, Sphere *sphere)
     {   
         return -1.0;
     }
-    else if(delta > 0)
+    else if(delta >= 0) //Deux solutions, ou == 0 -> racine double
     {
         double tp = (-b + sqrt(delta)) / (2.0 * a);
         double tm = (-b - sqrt(delta)) / (2.0 * a);
@@ -34,20 +34,12 @@ double intersectSphere(Ray *r, Sphere *sphere)
         }
         else //Un des deux est négatif
         {
-            double res = tm>tp?tm:tp;
+            double res = tm>tp?tp:tm;
             if(res > 0)
                 return res;
             else
                 return -1;
         }
-    }
-    else //delta == 0
-    {
-        double t = -b / (2.0 * a);
-        if(t >= 0)
-            return t;
-        else
-            return -1;
     }
 }
 
