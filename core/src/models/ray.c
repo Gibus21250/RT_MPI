@@ -44,7 +44,7 @@ double intersectSphere(Ray *r, Sphere *sphere)
     else //delta == 0
     {
         double t = -b / (2.0 * a);
-        if(t > 0)
+        if(t >= 0)
             return t;
         else
             return -1;
@@ -55,9 +55,9 @@ Ray move(Ray *r, double t)
 {
     Ray res = {
         {
-        r->o.x = r->o.x + t * r->v.x,
-        r->o.y = r->o.y + t * r->v.y,
-        r->o.z = r->o.z + t * r->v.z
+            r->o.x = r->o.x + t * r->v.x,
+            r->o.y = r->o.y + t * r->v.y,
+            r->o.z = r->o.z + t * r->v.z
         },
         {r->v.x, r->v.y, r->v.z}
     };
