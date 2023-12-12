@@ -23,7 +23,7 @@ int main(int argc, char const **argv)
     };
 
     Camera camera = {
-        .position = {5, 5, 5},
+        .position = {2, 2, 2},
         .lookAt = {0, 0, 0},
         .up = {0, 1, 0},
         .distance = 1,
@@ -41,13 +41,17 @@ int main(int argc, char const **argv)
     SDL_Window* window = SDL_CreateWindow("Ray Tracing", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, ecran.l, ecran.L, SDL_WINDOW_SHOWN);
     SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 
-    Sphere test = {{0, 0, 1}, 0.2, {0, 0, 1}};
-    Sphere test2 = {{1, 0, 0}, 0.2, {1, 0, 0}};
-    Sphere test3 = {{0, 1, 0}, 0.2, {0, 1, 0}};
+    Sphere x = {{1, 0, 0}, 0.2, {1, 0, 0}};
+    Sphere y = {{0, 1, 0}, 0.2, {0, 1, 0}};
+    Sphere z = {{0, 0, 1}, 0.2, {0, 0, 1}};
+    Sphere centre = {{1, 1, 1}, 0.2, {0, 0, 0}};
+    Sphere test = {{1, 0, 0}, 10, {0, -10.5, 0}};
 
+    addModel(&scene, &x);
+    addModel(&scene, &y);
+    addModel(&scene, &z);
+    addModel(&scene, &centre);
     addModel(&scene, &test);
-    addModel(&scene, &test2);
-    addModel(&scene, &test3);
 
     addLight(&scene, &light);
     //addLight(&scene, &light2);
