@@ -22,13 +22,16 @@ typedef struct Scene {
     ModelsArray spheres;
     ModelsArray lights;
     Color ambiant;
+    Color sky;
 } Scene;
 
-typedef struct Payload {
+typedef struct HitInfo {
     ModelType type;
     unsigned int indice;
-    Color color;
-} Payload;
+    Vector hitPoint;
+    Vector hitNormal;
+    Color hitColor;
+} HitInfo;
 
 void initScene(Scene *scene);
 void destroyScene(Scene *scene);
@@ -36,8 +39,8 @@ void destroyScene(Scene *scene);
 /**
  * Renvoie la couleur résultant après le lancement du rayon dans la scène
 */
-Color launchRay(Scene *scene, Ray *ray);
-char isShadowed(Scene *scene, Ray *ray);
+HitInfo launchRay(Scene *scene, Ray *ray);
+Color drawPixel(Scene *scene, Ray *ray);
 
 void addModel(Scene *scene, Sphere *sphere);
 void addLight(Scene *scene, PointLight *pLight);
