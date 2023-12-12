@@ -5,27 +5,12 @@
 
 typedef struct {
 
-    enum {PERSPECTIVE, PARALLEL} type;
+    Vector position;
+    Vector lookAt;
+    Vector up;
+    double distance;
+    double fov;
 
-    union 
-    {
-        struct 
-        {
-            Vector position;
-            Vector lookAt;
-            Vector up;
-            double distance;
-        } perspective;
-
-        struct 
-        {
-            Vector position;
-            Vector direction;
-            Vector up;
-        } parallel;
-        
-    } projection;
-    
 } Camera;
 
 #endif
