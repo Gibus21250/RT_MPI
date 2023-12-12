@@ -14,22 +14,22 @@
 
 void draw(Screen *screen, Camera *camera, Scene *scene)
 {
-    // Calcule du biais (pour lancer le rayon au centre du pixel, au lieu d'un coin)
+    
     double biaisx = (double)1 / screen->L;
     double biaisy = (double)1 / screen->l;
 
     double halfFOV = tan(camera->fov * 0.5 * M_PI / 180.0);
     double aspect = (double)screen->L / screen->l;
 
-    // Calcul de la direction du rayon en fonction des coordonnées du pixel
     Vector up = camera->up;
     Vector direction = sub(&camera->lookAt, &camera->position);
     normalize(&direction);
     Vector right = cross(&up, &direction);
 
+
     for (unsigned int i = 0; i < screen->L; i++)
     {
-        // Toutes les colonnes de chaque ligne
+        // Dessiner la ligne
         for (unsigned int j = 0; j < screen->l; ++j)
         {
 
