@@ -16,7 +16,7 @@
 int main(int argc, char const **argv)
 {
     //64 36 -> 16/9
-    Screen ecran = {NULL, 720, 480};
+    Screen ecran = {NULL, 1920, 1080};
     Scene scene = {
         .ambiant = {0.05, 0.05, 0.05},
         .sky = {0.1, 0.1, 0.1}
@@ -30,9 +30,9 @@ int main(int argc, char const **argv)
         .fov = 90
     };
 
-    PointLight light = {{1, 1, 1}, 1, {1, 1, 1}};
-    PointLight light2 = {{0, 0, 0}, 0.2, {1, 0, 0}};
-    PointLight light3 = {{0, -1, 0}, 0.2, {0, 1, 0}};
+    PointLight light = {{1, 1, 1}, 0.5, {1, 1, 1}};
+    PointLight light2 = {{0, 1.5, 0}, 1, {1, 0, 0}};
+    PointLight light3 = {{0, 2, 0}, 1, {0, 1, 0}};
 
     initScreen(&ecran);
     initScene(&scene);
@@ -45,13 +45,13 @@ int main(int argc, char const **argv)
     Sphere y = {{0, 1, 0}, 0.2, {0, 1, 0}};
     Sphere z = {{0, 0, 1}, 0.2, {0, 0, 1}};
     Sphere centre = {{1, 1, 1}, 0.2, {0, 0, 0}};
-    Sphere test = {{1, 0, 0}, 10, {0, -10.5, 0}};
+    Sphere test = {{1, 1, 1}, 10, {0, -10.5, 0}};
 
     addModel(&scene, &x);
     addModel(&scene, &y);
     addModel(&scene, &z);
     addModel(&scene, &centre);
-    addModel(&scene, &test);
+    //addModel(&scene, &test);
 
     addLight(&scene, &light);
     //addLight(&scene, &light2);

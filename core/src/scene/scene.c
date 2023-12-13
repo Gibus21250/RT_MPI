@@ -67,24 +67,24 @@ Color drawPixel(Scene *scene, Ray *ray)
             normalize(&toLight);
 
             Ray toLightRay = {firstHit.hitPoint, toLight};
-            toLightRay = move(&toLightRay, 0.00000001);
+            //toLightRay = move(&toLightRay, 0.00000001);
 
-            /*HitInfo penombra = launchRay(scene, &toLightRay);
+            HitInfo penombra = launchRay(scene, &toLightRay);
 
+            //Si aucune collision, on calcule la couleur en fonction de la lumière
             if(penombra.type == NONE)
             {
-            }
-            */
-            double cosTheta = dot(&firstHit.hitNormal, &toLight);
+                double cosTheta = dot(&firstHit.hitNormal, &toLight);
 
-            if(cosTheta >= -1 && cosTheta <= M_PI_2)
-            {
+                if(cosTheta >= -1 && cosTheta <= M_PI_2)
+                {
 
-                //TODO Ajouter variation en fonction de la distance
-                double intensity = fmax(0.0, cosTheta) * pLight->intensity;
-                Color lightColor = multiplyColord(&pLight->color, intensity);
-                //On accumule la couleur au point d'impact
-                resLight = addColor(&resLight, &lightColor);
+                    //TODO Ajouter variation en fonction de la distance
+                    double intensity = fmax(0.0, cosTheta) * pLight->intensity;
+                    Color lightColor = multiplyColord(&pLight->color, intensity);
+                    //On accumule la couleur au point d'impact
+                    resLight = addColor(&resLight, &lightColor);
+                }
             }
         }
 
@@ -102,7 +102,8 @@ HitInfo launchRay(Scene *scene, Ray *ray)
     
     //On s'occupe de récupérer le plus proche model hit par le rayon
     HitInfo closestHit = {NONE, -1, {0,0,0}, {0,0,0}, {0, 0, 0}};
-    double t = DBL_MAX;
+
+    double closestDist = DBL_MAX;
 
     //Array des Spheres
     ModelsArray* sphereArray = &scene->spheres;
@@ -113,18 +114,27 @@ HitInfo launchRay(Scene *scene, Ray *ray)
         Sphere *sphere = &((Sphere*) sphereArray->tab)[i];
 
         double tTmp = intersectSphere(ray, sphere);
+        
         //printf("%lf\n", tTmp);
         if(tTmp != -1)
         {
+            //On récupère le point à l'intersection
+            Vector hitPoint = move(ray, tTmp).o;
+
+            //Vecteur origine -> hitPoint
+            Vector cHit = sub(&hitPoint, &ray->o);
+            //dist carré
+            double dist = dot(&cHit, &cHit);
             //printf("Colision!\n", tTmp);
             //Colision
-            if(tTmp < t)
+            if(dist < closestDist)
             {
-                t = tTmp;
+                closestDist = dist;
 
                 closestHit.type = SPHERE;
                 closestHit.indice = i;
-                closestHit.hitPoint = move(ray, t).o;
+                closestHit.hitPoint = hitPoint;
+                closestHit.distance = dist;
                 
                 closestHit.hitNormal = sub(&closestHit.hitPoint, &sphere->center);
                 normalize(&closestHit.hitNormal);

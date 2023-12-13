@@ -28,6 +28,7 @@ typedef struct Scene {
 typedef struct HitInfo {
     ModelType type;
     unsigned int indice;
+    double distance;
     Vector hitPoint;
     Vector hitNormal;
     Color hitColor;
