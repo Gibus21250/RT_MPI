@@ -5,6 +5,7 @@ typedef struct Vector {
 	double x, y, z;
 } Vector;
 
+Vector randomRayHemisphere(Vector *normale);
 /**
  * Renvoie le produit scalair de deux vecteurs.
  */
@@ -25,5 +26,7 @@ Vector sub(Vector *v1, Vector *v2);
 Vector add(Vector *v1, Vector *v2);
 
 Vector mul(Vector *v1, double scal);
+
+Vector reflect(Vector *incidence, Vector *normal);
 
 #endif // !VECTOR_H
