@@ -62,7 +62,7 @@ Color drawPixel(Scene *scene, Ray *ray)
         {
 
             PointLight *pLight = &((PointLight*) scene->lights.tab)[i];
-            //Vecteur PL (point -> lumière)
+            //Vecteur PL (hit -> lumière)
             Vector toLight = sub(&pLight->position, &firstHit.hitPoint);
             normalize(&toLight);
 

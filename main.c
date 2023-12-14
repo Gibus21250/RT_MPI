@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
 #include "screen/screen.h"
 #include "scene/scene.h"
@@ -16,7 +17,7 @@
 int main(int argc, char const **argv)
 {
     //64 36 -> 16/9
-    Screen ecran = {NULL, 1920, 1080};
+    Screen ecran = {NULL, 720, 480};
     Scene scene = {
         .ambiant = {0.05, 0.05, 0.05},
         .sky = {0.1, 0.1, 0.1}
@@ -29,10 +30,6 @@ int main(int argc, char const **argv)
         .distance = 1,
         .fov = 90
     };
-
-    PointLight light = {{1, 1, 1}, 0.5, {1, 1, 1}};
-    PointLight light2 = {{0, 1.5, 0}, 1, {1, 0, 0}};
-    PointLight light3 = {{0, 2, 0}, 1, {0, 1, 0}};
 
     initScreen(&ecran);
     initScene(&scene);
@@ -47,14 +44,18 @@ int main(int argc, char const **argv)
     Sphere centre = {{1, 1, 1}, 0.2, {0, 0, 0}};
     Sphere test = {{1, 1, 1}, 10, {0, -10.5, 0}};
 
-    addModel(&scene, &x);
-    addModel(&scene, &y);
-    addModel(&scene, &z);
+    //addModel(&scene, &x);
+    //addModel(&scene, &y);
+    //addModel(&scene, &z);
     addModel(&scene, &centre);
-    //addModel(&scene, &test);
+    addModel(&scene, &test);
+
+    PointLight light = {{1, 1.5, 1}, 1, {0, 0, 1}};
+    PointLight light2 = {{1, 1, 1}, 1, {1, 0, 0}};
+    PointLight light3 = {{1, 0.5, 1}, 1, {0, 1, 0}};
 
     addLight(&scene, &light);
-    //addLight(&scene, &light2);
+    addLight(&scene, &light2);
     //addLight(&scene, &light3);
 
     SDL_Event event;
@@ -128,8 +129,16 @@ int main(int argc, char const **argv)
         }
         //printf("pos: %lf %lf %lf, lookat:%lf %lf %lf\n", camera.position.x, camera.position.y, camera.position.z, camera.lookAt.x, camera.lookAt.y, camera.lookAt.z);
         }
-
+        clock_t start, end;
+        double cpu_time_used;
+        start = clock();
         draw(&ecran, &camera, &scene);
+        end = clock();
+        // Calculez le temps passé en secondes
+        cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
+
+        // Affichez le temps
+        printf("Temps écoulé : %f secondes\n", cpu_time_used);
         //clear
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 
