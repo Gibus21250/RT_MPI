@@ -95,6 +95,20 @@ Color drawPixel(Scene *scene, Ray *ray)
     }
     
     return res;
+Color computeSkyColor(Scene *scene, Ray *ray)
+{
+    // Direction du rayon normalisée
+    Vector normalizedDirection = ray->v;
+
+    double t = 0.5 * (normalizedDirection.y + 1.0);
+    Color horizon = {1, 1, 0.8};
+
+    Color tmpDeb = multiplyColord(&horizon, (1-t));
+    Color tmpFin = multiplyColord(&scene->sky, t);
+
+    Color skyColor = addColor(&tmpDeb, &tmpFin);
+
+    return skyColor;
 }
 
 HitInfo launchRay(Scene *scene, Ray *ray)
