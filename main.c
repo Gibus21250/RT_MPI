@@ -6,6 +6,7 @@
 #include "scene/scene.h"
 #include "scene/camera.h"
 #include "scene/light.h"
+#include "models/material.h"
 
 #define PAS 0.1
 
@@ -20,7 +21,8 @@ int main(int argc, char const **argv)
     Screen ecran = {NULL, 720, 480};
     Scene scene = {
         .ambiant = {0.05, 0.05, 0.05},
-        .sky = {0.1, 0.1, 0.1}
+        .sky = {0, 0.5, 0.8},
+        .maxBounces = 16
     };
 
     Camera camera = {
@@ -35,27 +37,59 @@ int main(int argc, char const **argv)
     initScene(&scene);
 
     SDL_Init(SDL_INIT_VIDEO);
-    SDL_Window* window = SDL_CreateWindow("Ray Tracing", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, ecran.l, ecran.L, SDL_WINDOW_SHOWN);
+    SDL_Window* window = SDL_CreateWindow("Ray Tracing (Pas encore MPI)", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, ecran.l, ecran.L, SDL_WINDOW_SHOWN);
     SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 
-    Sphere x = {{1, 0, 0}, 0.2, {1, 0, 0}};
-    Sphere y = {{0, 1, 0}, 0.2, {0, 1, 0}};
-    Sphere z = {{0, 0, 1}, 0.2, {0, 0, 1}};
-    Sphere centre = {{1, 1, 1}, 0.2, {0, 0, 0}};
-    Sphere test = {{1, 1, 1}, 10, {0, -10.5, 0}};
+    //On commence par initialiser les materiaux:
+    Material matx = {
+        .type = DIFFUSE,
+        .albedo = {1, 0, 0},
+        .roughness = 1.0
+    };
+    Material maty = {
+        .type = DIFFUSE,
+        .albedo = {0, 1, 0},
+        .roughness = 1.0
+    };
+    Material matz = {
+        .type = DIFFUSE,
+        .albedo = {0, 0, 1},
+        .roughness = 1.0
+    };
+    Material blanc = {
+        .type = DIFFUSE,
+        .albedo = {1, 1, 1},
+        .roughness = 0
+    };
 
-    //addModel(&scene, &x);
-    //addModel(&scene, &y);
-    //addModel(&scene, &z);
+    //On ajoute les matériaux à la scène
+    unsigned int imatx = addMaterial(&scene, &matx);
+    unsigned int imaty = addMaterial(&scene, &maty);
+    unsigned int imatz = addMaterial(&scene, &matz);
+    unsigned int imatblanc = addMaterial(&scene, &blanc);
+
+    printf("%d %d %d %d\n", imatx, imaty, imatz, imatblanc);
+
+    //On initialise les éléments de la scène
+    Sphere x = {{1, 0, 0}, 0.2, imatx};
+    Sphere y = {{0, 1, 0}, 0.2, imaty};
+    Sphere z = {{0, 0, 1}, 0.2, imatz};
+    Sphere centre = {{0, 0, 0}, 0.2, imatblanc};
+    Sphere test = {{0, -10.5, 0}, 10, imatblanc};
+
+    //On ajoute les éléments dans la scène
+    addModel(&scene, &x);
+    addModel(&scene, &y);
+    addModel(&scene, &z);
     addModel(&scene, &centre);
     addModel(&scene, &test);
 
-    PointLight light = {{1, 1.5, 1}, 1, {0, 0, 1}};
+    PointLight light = {{1, 1.5, 1}, 1, {1, 1, 1}};
     PointLight light2 = {{1, 1, 1}, 1, {1, 0, 0}};
     PointLight light3 = {{1, 0.5, 1}, 1, {0, 1, 0}};
 
-    addLight(&scene, &light);
-    addLight(&scene, &light2);
+    //addLight(&scene, &light);
+    //addLight(&scene, &light2);
     //addLight(&scene, &light3);
 
     SDL_Event event;
