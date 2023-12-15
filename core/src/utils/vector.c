@@ -1,6 +1,54 @@
 #include "utils/vector.h"
-#include <math.h>
 
+#include <math.h>
+#include <stdlib.h>
+
+#include "utils/math.h"
+
+Vector randomRayHemisphere(Vector *normale)
+{
+    // Génération de coordonnées sphériques aléatoires
+    double theta = 2.0 * M_PI * ((double) rand() / RAND_MAX); // Angle azimutal
+    double phi = acos(1.0 - 2.0 * ((double) rand() / RAND_MAX)); // Angle polaire
+
+    // Conversion des coordonnées sphériques en coordonnées cartésiennes
+    double x = sin(phi) * cos(theta);
+    double y = sin(phi) * sin(theta);
+    double z = cos(phi);
+
+    // Générer une base orthogonale à partir de la normale
+	Vector tangent = cross(&(Vector){0, 1, 0}, normale);
+    normalize(&tangent);
+    Vector bitangent = cross(normale, &tangent);
+	normalize(&bitangent);
+
+    // Calculer la direction du rayon dans la base locale
+	Vector tx = mul(&tangent, x);
+	Vector ty = mul(&bitangent, y);
+	Vector nz = mul(normale, z);
+	
+    Vector randomDirection = add(&tx, &ty);
+	randomDirection = add(&randomDirection, &nz);
+
+    normalize(&randomDirection);
+
+    return randomDirection;
+}
+
+Vector randomFrom(double deb, double fin)
+{
+	double tx = ((double) rand() / RAND_MAX);
+	double ty = ((double) rand() / RAND_MAX);
+	double tz = ((double) rand() / RAND_MAX);
+
+	Vector res = {
+		(1 - tx) * deb + tx * fin,
+		(1 - ty) * deb + ty * fin,
+		(1 - tz) * deb + tz * fin
+	};
+
+	return res;
+}
 
 double dot(Vector* u, Vector* v)
 {
@@ -57,4 +105,11 @@ Vector mul(Vector *v1, double scal)
 	};
 
 	return res;
+}
+
+Vector reflect(Vector *incidence, Vector *normal)
+{
+	double d = dot(incidence, normal) * 2.0;
+	Vector snormal = mul(normal, d);
+	return sub(incidence, &snormal);
 }
