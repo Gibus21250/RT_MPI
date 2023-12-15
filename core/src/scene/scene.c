@@ -2,8 +2,7 @@
 
 #include "utils/vector.h"
 #include "utils/math.h"
-
-
+#include "models/material.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -26,75 +25,108 @@ void initScene(Scene *scene)
     scene->lights.tab = malloc(STEP * sizeof(PointLight));
     scene->lights.nb = 0;
     scene->lights.max = STEP;
+
+    //On init le tableau des materiaux
+    scene->materials.tab = malloc(STEP * sizeof(Material));
+    scene->materials.nb = 0;
+    scene->materials.max = STEP;
 }
 
 void destroyScene(Scene *scene)
 {
     free(scene->spheres.tab);
     free(scene->lights.tab);
+    free(scene->materials.tab);
 }
 
 Color drawPixel(Scene *scene, Ray *ray)
 {   
-    //printf("o: %lf %lf %lf\n", ray->o.x, ray->o.y, ray->o.z);
-    //printf("dir: %lf %lf %lf\n\n", ray->v.x, ray->v.y, ray->v.z);
-    //Color res = {0, 0.5, 0.8};
 
-    HitInfo firstHit = launchRay(scene, ray);
-    Color res = scene->sky;
-    //On a notre t à l'intersection, on va calculer sa luminance en fonction des lumières
-    if(firstHit.type != NONE)
+    Color res = {0, 0, 0};
+    double energie = 1.0;
+
+    for(unsigned int i = 0; i < scene->maxBounces; ++i)
     {
-        switch (firstHit.type)
+        HitInfo hit = launchRay(scene, ray);
+        
+        if(hit.type == NONE)
         {
-        case SPHERE:
-            res = ((Sphere*) scene->spheres.tab)[firstHit.indice].color;
-            break;
-        default:
+            //si le rayon ne touche rien, on récupère la couleur du ciel
+            Color sky =  computeSkyColor(scene, ray);
+            sky = multiplyColord(&sky, energie);
+            res = addColor(&res, &sky);
             break;
         }
+        //On récupère le materiaux touche
+        Material matHit = ((Material*) scene->materials.tab)[hit.materialIndice];
+
+        //En fonction du type de materiaux
+        Color direct = computeDirectLight(scene, &hit);
         
-        //Gerer les lumière
-        Color resLight = scene->ambiant; //== ombre
-        ModelsArray* ligthArray = &scene->lights;
+        direct = multiplyColord(&direct, energie);
+        direct = multiplyColorc(&matHit.albedo, &direct);
+        res = addColor(&res, &direct);
 
-        for(unsigned int i = 0; i < ligthArray->nb; ++i)
+        energie *= 0.7;
+
+        //On change l'origine du point et sa direction pour le prochain lancé
+        ray->o = hit.hitPoint;
+        Vector random = randomFrom(-0.5, 0.5);
+        Vector devia = mul(&random, matHit.roughness);
+        devia = add(&devia, &hit.hitNormal);
+        normalize(&devia);
+        //ray->v = randomRayHemisphere(&hit.hitNormal);
+        ray->v = reflect(&ray->v, &devia);
+
+    }
+    clampColor(&res);
+    return res;
+}
+
+Color computeDirectLight(Scene *scene, HitInfo *hit)
+{
+    //couleur de l'éclairage direct de base
+    Color directLight = scene->ambiant;
+
+    DynamicArray* lightArray = &scene->lights;
+
+    //Pour chaque lumière de la scène
+    for(unsigned int i = 0; i < lightArray->nb; ++i)
+    {
+        PointLight *pLight = &((PointLight*) scene->lights.tab)[i];
+
+        //Vecteur PL (hit -> lumière)
+        Vector toLight = sub(&pLight->position, &hit->hitPoint);
+        normalize(&toLight);
+
+        Ray toLightRay = {hit->hitPoint, toLight};
+        //toLightRay = move(&toLightRay, 0.00000001);
+
+        HitInfo shadowHit = launchRay(scene, &toLightRay);
+
+        //Si aucune collision, on calcule la couleur en fonction de la lumière testée
+        if(shadowHit.type == NONE)
         {
+            double cosTheta = dot(&hit->hitNormal, &toLight);
 
-            PointLight *pLight = &((PointLight*) scene->lights.tab)[i];
-            //Vecteur PL (hit -> lumière)
-            Vector toLight = sub(&pLight->position, &firstHit.hitPoint);
-            normalize(&toLight);
-
-            Ray toLightRay = {firstHit.hitPoint, toLight};
-            //toLightRay = move(&toLightRay, 0.00000001);
-
-            HitInfo penombra = launchRay(scene, &toLightRay);
-
-            //Si aucune collision, on calcule la couleur en fonction de la lumière
-            if(penombra.type == NONE)
+            //Si la lumière est en direction de la normale de la normale
+            if(cosTheta >= -1 && cosTheta <= M_PI_2)
             {
-                double cosTheta = dot(&firstHit.hitNormal, &toLight);
-
-                if(cosTheta >= -1 && cosTheta <= M_PI_2)
-                {
-
-                    //TODO Ajouter variation en fonction de la distance
-                    double intensity = fmax(0.0, cosTheta) * pLight->intensity;
-                    Color lightColor = multiplyColord(&pLight->color, intensity);
-                    //On accumule la couleur au point d'impact
-                    resLight = addColor(&resLight, &lightColor);
-                }
+                //TODO Ajouter variation en fonction de la distance
+                double intensity = fmax(0.0, cosTheta) * pLight->intensity;
+                Color lightColor = multiplyColord(&pLight->color, intensity);
+                //On accumule la couleur au point d'impact
+                directLight = addColor(&directLight, &lightColor);
             }
         }
-
-        //On a accumulé toutes les couleurs au point d'impacte
-        clampColor(&resLight);
-
-        res = multiplyColorc(&res, &resLight);
     }
-    
-    return res;
+
+    //On a accumulé toutes les lumières au point d'impacte
+    clampColor(&directLight);
+
+    return directLight;
+}
+
 Color computeSkyColor(Scene *scene, Ray *ray)
 {
     // Direction du rayon normalisée
@@ -115,14 +147,14 @@ HitInfo launchRay(Scene *scene, Ray *ray)
 {
     
     //On s'occupe de récupérer le plus proche model hit par le rayon
-    HitInfo closestHit = {NONE, -1, {0,0,0}, {0,0,0}, {0, 0, 0}};
+    HitInfo closestHit = {NONE, -1, -1, DBL_MAX, {0,0,0}, {0,0,0}};
 
     double closestDist = DBL_MAX;
 
     //Array des Spheres
-    ModelsArray* sphereArray = &scene->spheres;
+    DynamicArray* sphereArray = &scene->spheres;
+    
     //Pour chaque sphere
-    //#### comparer dist
     for(unsigned int i = 0; i < sphereArray->nb; ++i)
     {   
         Sphere *sphere = &((Sphere*) sphereArray->tab)[i];
@@ -144,25 +176,23 @@ HitInfo launchRay(Scene *scene, Ray *ray)
             if(dist < closestDist)
             {
                 closestDist = dist;
-
                 closestHit.type = SPHERE;
-                closestHit.indice = i;
-                closestHit.hitPoint = hitPoint;
+                closestHit.modelIndice = i;
+                closestHit.materialIndice = sphere->materialIndice;
                 closestHit.distance = dist;
-                
-                closestHit.hitNormal = sub(&closestHit.hitPoint, &sphere->center);
+                closestHit.hitPoint = hitPoint;
+                closestHit.hitNormal = sub(&hitPoint, &sphere->center);
+
                 normalize(&closestHit.hitNormal);
             }
         }
     }
-
     return closestHit;
-   
 }
 
 void addModel(Scene *scene, Sphere *sphere)
 {
-    ModelsArray* sphereArray = &scene->spheres;
+    DynamicArray* sphereArray = &scene->spheres;
     //Si la taille du tableau ne suffis plus, on l'agrandi de STEP
     if(sphereArray->nb == sphereArray->max)
     {
@@ -175,7 +205,7 @@ void addModel(Scene *scene, Sphere *sphere)
 
 void addLight(Scene *scene, PointLight *pLight)
 {
-    ModelsArray* lightArray = &scene->lights;
+    DynamicArray* lightArray = &scene->lights;
     //Si la taille du tableau ne suffis plus, on l'agrandi de STEP
     if(lightArray->nb == lightArray->max)
     {
@@ -185,4 +215,21 @@ void addLight(Scene *scene, PointLight *pLight)
 
     ((PointLight*) lightArray->tab)[lightArray->nb] = *pLight;
     lightArray->nb++;
+}
+
+unsigned int addMaterial(Scene *scene, Material *pMat)
+{
+    DynamicArray* materialArray = &scene->materials;
+    //Si la taille du tableau ne suffis plus, on l'agrandi de STEP
+    if(materialArray->nb == materialArray->max)
+    {
+        materialArray->max += STEP;
+        materialArray->tab = realloc(materialArray->tab, materialArray->max * sizeof(Material));
+    }
+
+    //On sauvegarde le matériaux dans le tableau
+    ((Material*) materialArray->tab)[materialArray->nb] = *pMat;
+    materialArray->nb++;
+
+    return (materialArray->nb-1);
 }
