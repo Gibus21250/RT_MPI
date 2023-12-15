@@ -11,16 +11,17 @@ typedef enum {
     SPHERE
 } ModelType;
 
-typedef struct ModelsArray {
+typedef struct DynamicArray {
     void* tab;
     unsigned int nb;
     unsigned int max;
-} ModelsArray;
+} DynamicArray;
 
 
 typedef struct Scene {
-    ModelsArray spheres;
-    ModelsArray lights;
+    DynamicArray spheres;
+    DynamicArray lights;
+    DynamicArray materials;
     Color ambiant;
     Color sky;
 } Scene;
