@@ -3,6 +3,7 @@
 
 #include "models/sphere.h"
 #include "models/ray.h"
+#include "models/material.h"
 
 #include "scene/light.h"
 
@@ -24,27 +25,38 @@ typedef struct Scene {
     DynamicArray materials;
     Color ambiant;
     Color sky;
+    unsigned int maxBounces;
 } Scene;
 
 typedef struct HitInfo {
     ModelType type;
-    unsigned int indice;
+    unsigned int modelIndice;
+    unsigned int materialIndice;
     double distance;
     Vector hitPoint;
     Vector hitNormal;
-    Color hitColor;
+    
 } HitInfo;
 
 void initScene(Scene *scene);
 void destroyScene(Scene *scene);
 
+void addModel(Scene *scene, Sphere *sphere);
+void addLight(Scene *scene, PointLight *pLight);
+
 /**
- * Renvoie la couleur résultant après le lancement du rayon dans la scène
+ * Ajoute dans la tableau des matériaux de la scène, le matériaux en argument, et renvoie son indice
+*/
+unsigned int addMaterial(Scene *scene, Material *mat);
+
+Color computeSkyColor(Scene *scene, Ray *ray);
+
+/**
+ * Renvoie une structure contenant les infos d'un hit
 */
 HitInfo launchRay(Scene *scene, Ray *ray);
 Color drawPixel(Scene *scene, Ray *ray);
 
-void addModel(Scene *scene, Sphere *sphere);
-void addLight(Scene *scene, PointLight *pLight);
+Color computeDirectLight(Scene *scene, HitInfo *hit);
 
 #endif

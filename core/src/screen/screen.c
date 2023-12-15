@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <math.h>
 
 void draw(Screen *screen, Camera *camera, Scene *scene)
 {
@@ -40,7 +41,6 @@ void draw(Screen *screen, Camera *camera, Scene *scene)
             Vector um = mul(&up, yEcran * halfFOV);
             Vector rayDir = add(&rm, &um);
             Vector rayDirection = add(&rayDir, &direction);
-
             normalize(&rayDirection);
 
             Ray ray = {camera->position, rayDirection};
