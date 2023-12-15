@@ -5,9 +5,9 @@
 #include "utils/color.h"
 
 typedef struct Sphere {
-    Color color;
-    float r;
     Vector center;
+    float r;
+    unsigned int materialIndice;
 } Sphere;
 
 #endif
