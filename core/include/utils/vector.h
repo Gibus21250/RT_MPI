@@ -6,6 +6,8 @@ typedef struct Vector {
 } Vector;
 
 Vector randomRayHemisphere(Vector *normale);
+
+Vector randomFrom(double deb, double fin);
 /**
  * Renvoie le produit scalair de deux vecteurs.
  */
