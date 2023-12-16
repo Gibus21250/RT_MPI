@@ -40,8 +40,11 @@ int main(int argc, char const **argv)
     initScreen(&ecran);
     initScene(&scene);
 
+    const char title[100];
+    sprintf(title, "Ray Tracing (Pas encore MPI) - %d bounces | samples: %d", scene.maxBounces, ecran.nbSample);
+
     SDL_Init(SDL_INIT_VIDEO);
-    SDL_Window* window = SDL_CreateWindow("Ray Tracing (Pas encore MPI)", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, ecran.l, ecran.L, SDL_WINDOW_SHOWN);
+    SDL_Window* window = SDL_CreateWindow(title, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, ecran.l, ecran.L, SDL_WINDOW_SHOWN);
     SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 
     //On commence par initialiser les materiaux:
@@ -243,6 +246,9 @@ int main(int argc, char const **argv)
 
         // Mettez à jour le rendu
         SDL_RenderPresent(renderer);
+
+        sprintf(title, "Ray Tracing (Pas encore MPI) - %d bounces | samples: %d", scene.maxBounces, ecran.nbSample);
+        SDL_SetWindowTitle(window, title);
 
         // Ajoutez une petite pause pour limiter la fréquence d'affichage (facultatif)
         SDL_Delay(16);
