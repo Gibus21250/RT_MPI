@@ -32,10 +32,10 @@ typedef struct HitInfo {
     ModelType type;
     unsigned int modelIndice;
     unsigned int materialIndice;
-    double distance;
+    double distance2;
     Vector hitPoint;
     Vector hitNormal;
-    
+    Ray ray;
 } HitInfo;
 
 void initScene(Scene *scene);
@@ -57,6 +57,10 @@ Color computeSkyColor(Scene *scene, Ray *ray);
 HitInfo launchRay(Scene *scene, Ray *ray);
 Color drawPixel(Scene *scene, Ray *ray);
 
-Color computeDirectLight(Scene *scene, HitInfo *hit);
+/**
+ * Calcule la couleur au point hit:
+ * Abiant + diffuse + specular
+*/
+Color computeColor(Scene *scene, HitInfo *hit);
 
 #endif
