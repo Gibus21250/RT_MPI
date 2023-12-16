@@ -14,7 +14,10 @@ typedef struct Material
 {
     MaterialType type;
     Color albedo;
-    double roughness;
+    Color specular;
+    double roughness;           //Diffuse
+    double metalness;
+    double shininess;
     double refractionFactor;
     Color emissive;
 } Material;
