@@ -8,8 +8,10 @@
 #include "scene/camera.h"
 
 typedef struct Screen {
-    Color *screen;
     unsigned int l, L;
+    unsigned int nbSample;
+    Color *screen;
+    Color *accumulator;
 } Screen;
 
 /**
@@ -22,6 +24,9 @@ void destroyScreen(Screen *screen);
 //Remplie l'écran de couleur des rayons envoyé à travers la scène
 void draw(Screen* screen, Camera *camera, Scene *scene);
 
+/**
+ * Print les valeurs des pixels dans stdout !!! Debug de dernier recours
+*/
 void showResult(Screen *screen);
 
 #endif

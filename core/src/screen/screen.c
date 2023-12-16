@@ -15,6 +15,7 @@
 
 void draw(Screen *screen, Camera *camera, Scene *scene)
 {
+    screen->nbSample++;
     
     double biaisx = (double)1 / screen->L;
     double biaisy = (double)1 / screen->l;
@@ -27,7 +28,7 @@ void draw(Screen *screen, Camera *camera, Scene *scene)
     normalize(&direction);
     Vector right = cross(&up, &direction);
 
-
+    //Accumuler les samples infos
     for (unsigned int i = 0; i < screen->L; i++)
     {
         // Dessiner la ligne
@@ -46,9 +47,14 @@ void draw(Screen *screen, Camera *camera, Scene *scene)
             Ray ray = {camera->position, rayDirection};
             Color pixelColor = drawPixel(scene, &ray);
 
-            screen->screen[i * screen->l + j] = pixelColor;
+            screen->accumulator[i * screen->l + j] = addColor(&screen->accumulator[i * screen->l + j], &pixelColor);
+
+            //Actualiser l'affichage
+            screen->screen[i * screen->l + j] = multiplyColord(&screen->accumulator[i * screen->l + j], (1.0 / screen->nbSample));
         }
     }
+    //On incrémente le nb de sample
+    
 }
 
 void showResult(Screen *screen)
@@ -67,14 +73,18 @@ void showResult(Screen *screen)
 void initScreen(Screen *screen)
 {
     screen->screen = (Color *)malloc(screen->l * screen->L * sizeof(Color));
+    screen->accumulator = (Color *)malloc(screen->l * screen->L * sizeof(Color));
 }
 
 void clearScreen(Screen *screen)
 {
-    memset(screen, 0, screen->l * screen->L * sizeof(Color));
+    screen->nbSample = 0;
+    memset(screen->screen, 0, screen->l * screen->L * sizeof(Color));
+    memset(screen->accumulator, 0, screen->l * screen->L * sizeof(Color));
 }
 
 void destroyScreen(Screen *screen)
 {
     free(screen->screen);
+    free(screen->accumulator);
 }
