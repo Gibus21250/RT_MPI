@@ -35,7 +35,7 @@ typedef struct HitInfo {
     double distance2;
     Vector hitPoint;
     Vector hitNormal;
-    Ray ray;
+    Ray originalRay;
 } HitInfo;
 
 void initScene(Scene *scene);
@@ -55,6 +55,10 @@ Color computeSkyColor(Scene *scene, Ray *ray);
  * Renvoie une structure contenant les infos d'un hit
 */
 HitInfo launchRay(Scene *scene, Ray *ray);
+/**
+ * Lance un rayon dans la scène, et décris tous ce qu'il touche
+*/
+HitInfo debugRay(Scene *scene, Ray *ray);
 Color drawPixel(Scene *scene, Ray *ray);
 
 /**

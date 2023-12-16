@@ -169,6 +169,61 @@ Color computeSkyColor(Scene *scene, Ray *ray)
     return skyColor;
 }
 
+HitInfo debugRay(Scene *scene, Ray *ray)
+{
+    // On s'occupe de récupérer le plus proche model hit par le rayon
+    HitInfo closestHit = {NONE, -1, -1, DBL_MAX, {0, 0, 0}, {0, 0, 0}, *ray};
+
+    // Array des Spheres
+    DynamicArray *sphereArray = &scene->spheres;
+    printf("Rayon: o:%lf %lf %lf dir: %lf %lf %lf\n",
+        ray->o.x, ray->o.y, ray->o.z,
+        ray->v.x, ray->v.y, ray->v.z
+    );
+    printf("Parcours de toutes les sphère: %d sphere(s)\n", sphereArray->nb);
+    // Pour chaque sphere
+    for (unsigned int i = 0; i < sphereArray->nb; ++i)
+    {
+        Sphere *sphere = &((Sphere *)sphereArray->tab)[i];
+
+        printf("-------------------------\nInfo sphère:\nCentre: %lf %lf %lf\nr: %f\nmatIndice: %d\n",
+        sphere->center.x, sphere->center.y, sphere->center.z, sphere->r, sphere->materialIndice
+        );
+
+        double tTmp = intersectSphere(ray, sphere);
+
+        printf("\tClosest t: %lf\n", tTmp);
+
+        // printf("%lf\n", tTmp);
+        if (tTmp > 0)
+        {
+            // On récupère le point à l'intersection
+            Vector hitPoint = move(ray, tTmp).o;
+            printf("\t\tPosition hit: %lf %lf %lf\n", hitPoint.x, hitPoint.y, hitPoint.z);
+            // Vecteur origine -> hitPoint
+            Vector cHit = sub(&hitPoint, &ray->o);
+            printf("\t\tVecteur cHit: %lf %lf %lf\n", cHit.x, cHit.y, cHit.z);
+            // dist carré
+            double dist = dot(&cHit, &cHit);
+
+            printf("\t\tDistance2 origine -> hitPoint: %lf\n", dist);
+            // Colision
+            if (dist < closestHit.distance2)
+            {
+                printf("\t\t\tHit plus proche!\n");
+                closestHit.type = SPHERE;
+                closestHit.modelIndice = i;
+                closestHit.materialIndice = sphere->materialIndice;
+                closestHit.distance2 = dist;
+                closestHit.hitPoint = hitPoint;
+                closestHit.hitNormal = sub(&hitPoint, &sphere->center);
+                normalize(&closestHit.hitNormal);
+            }
+        }
+    }
+    return closestHit;
+}
+
 HitInfo launchRay(Scene *scene, Ray *ray)
 {
 
