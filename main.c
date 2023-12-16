@@ -18,19 +18,23 @@
 int main(int argc, char const **argv)
 {
     //64 36 -> 16/9
-    Screen ecran = {NULL, 720, 480};
+    Screen ecran = {
+        .l = 720,
+        .L = 480
+    };
+
     Scene scene = {
         .ambiant = {0.05, 0.05, 0.05},
-        .sky = {0, 0.5, 0.8},
-        .maxBounces = 16
+        .sky = {0, 0.4, 0.7},
+        .maxBounces = 2
     };
 
     Camera camera = {
-        .position = {2, 2, 2},
+        .position = {1.5, 0, 1.5},
         .lookAt = {0, 0, 0},
         .up = {0, 1, 0},
         .distance = 1,
-        .fov = 90
+        .fov = 45
     };
 
     initScreen(&ecran);
