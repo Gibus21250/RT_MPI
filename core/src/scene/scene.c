@@ -85,38 +85,52 @@ Color drawPixel(Scene *scene, Ray *ray)
 
 Color computeDirectLight(Scene *scene, HitInfo *hit)
 {
-    //couleur de l'éclairage direct de base
-    Color directLight = scene->ambiant;
+    // couleur de l'éclairage direct de base
+    Material mat = ((Material *)scene->materials.tab)[hit->materialIndice];
 
     DynamicArray* lightArray = &scene->lights;
 
-    //Pour chaque lumière de la scène
-    for(unsigned int i = 0; i < lightArray->nb; ++i)
-    {
-        PointLight *pLight = &((PointLight*) scene->lights.tab)[i];
+    DynamicArray *lightArray = &scene->lights;
 
-        //Vecteur PL (hit -> lumière)
+    // Pour chaque lumière de la scène
+    for (unsigned int i = 0; i < lightArray->nb; ++i)
+    {
+        PointLight *pLight = &((PointLight *)scene->lights.tab)[i];
+
+        // Vecteur PL (hit -> lumière)
         Vector toLight = sub(&pLight->position, &hit->hitPoint);
+        double distanceLight2 = dot(&toLight, &toLight);
         normalize(&toLight);
 
         Ray toLightRay = {hit->hitPoint, toLight};
-        //toLightRay = move(&toLightRay, 0.00000001);
+        toLightRay = move(&toLightRay, 0.0000001);
 
         HitInfo shadowHit = launchRay(scene, &toLightRay);
 
-        //Si aucune collision, on calcule la couleur en fonction de la lumière testée
-        if(shadowHit.type == NONE)
+        // Si aucune collision, on calcule la couleur diffuse en fonction de la lumière testée
+        if (shadowHit.type == NONE)
         {
             double cosTheta = dot(&hit->hitNormal, &toLight);
 
-            //Si la lumière est en direction de la normale de la normale
-            if(cosTheta >= -1 && cosTheta <= M_PI_2)
+            // si l'angle > 0 && < PI (180 deg)
+            if (cosTheta >= -1 && cosTheta <= M_PI_2)
             {
-                //TODO Ajouter variation en fonction de la distance
-                double intensity = fmax(0.0, cosTheta) * pLight->intensity;
+                
+                double atenuation = 1. / (0.1 + distanceLight2);
+                // On calcule la couleur diffuse
+                double intensity = fmax(0.0, cosTheta) * pLight->intensity * atenuation;
                 Color lightColor = multiplyColord(&pLight->color, intensity);
-                //On accumule la couleur au point d'impact
-                directLight = addColor(&directLight, &lightColor);
+                // On accumule la couleur au point d'impact pour toutes les lampe
+                diffuse = addColor(&diffuse, &lightColor);
+
+                // On calcule la couleur spéculaire
+                Vector R = reflect(&hit->ray.v, &hit->hitNormal);
+                double coeff = dot(&R, &toLight);
+                coeff = fmax(coeff, 0);
+                coeff = pow(coeff, mat.shininess);
+                Color icoeff = multiplyColord(&pLight->color, coeff);
+                icoeff = multiplyColord(&icoeff, atenuation);
+                specular = addColor(&specular, &icoeff);
             }
         }
     }
