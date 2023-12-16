@@ -12,21 +12,20 @@
 #define STEP 10
 
 void initScene(Scene *scene)
-{   
-    //Les initialisations se font dans l'odre de l'ENUM ModelType, sans NONE
+{
+    // Les initialisations se font dans l'odre de l'ENUM ModelType, sans NONE
 
-    //Initialisation de la structure de sphere
+    // Initialisation de la structure de sphere
     scene->spheres.tab = malloc(STEP * sizeof(Sphere));
     scene->spheres.nb = 0;
     scene->spheres.max = STEP;
 
-
-    //On init le tableau des lumières
+    // On init le tableau des lumières
     scene->lights.tab = malloc(STEP * sizeof(PointLight));
     scene->lights.nb = 0;
     scene->lights.max = STEP;
 
-    //On init le tableau des materiaux
+    // On init le tableau des materiaux
     scene->materials.tab = malloc(STEP * sizeof(Material));
     scene->materials.nb = 0;
     scene->materials.max = STEP;
@@ -40,55 +39,60 @@ void destroyScene(Scene *scene)
 }
 
 Color drawPixel(Scene *scene, Ray *ray)
-{   
+{
 
     Color res = {0, 0, 0};
     double energie = 1.0;
 
-    for(unsigned int i = 0; i < scene->maxBounces; ++i)
+    // On va lancer, si possible, le rayon maximum bounce rebonds
+    for (unsigned int i = 0; i < scene->maxBounces; ++i)
     {
         HitInfo hit = launchRay(scene, ray);
-        
-        if(hit.type == NONE)
+
+        if (hit.type == NONE)
         {
-            //si le rayon ne touche rien, on récupère la couleur du ciel
-            Color sky =  computeSkyColor(scene, ray);
+            // si le rayon ne touche rien, on récupère la couleur du ciel
+            Color sky = computeSkyColor(scene, ray);
+            energie *= 0.5;
             sky = multiplyColord(&sky, energie);
             res = addColor(&res, &sky);
             break;
         }
-        //On récupère le materiaux touche
-        Material matHit = ((Material*) scene->materials.tab)[hit.materialIndice];
+        // On récupère le material touché
+        Material matHit = ((Material *)scene->materials.tab)[hit.materialIndice];
 
-        //En fonction du type de materiaux
-        Color direct = computeDirectLight(scene, &hit);
-        
-        direct = multiplyColord(&direct, energie);
-        direct = multiplyColorc(&matHit.albedo, &direct);
-        res = addColor(&res, &direct);
+        // En fonction du type de materiaux
+        Color directLight = computeColor(scene, &hit);
+        clampColor(&directLight, 0, 1);
 
-        energie *= 0.7;
+        directLight = multiplyColord(&directLight, energie);
+        // directLight = multiplyColorc(&matHit.albedo, &directLight);
+        res = addColor(&res, &directLight);
 
-        //On change l'origine du point et sa direction pour le prochain lancé
+        energie *= 0.5;
+
+        // On change l'origine du point et sa direction pour le prochain lancé
         ray->o = hit.hitPoint;
         Vector random = randomFrom(-0.5, 0.5);
         Vector devia = mul(&random, matHit.roughness);
         devia = add(&devia, &hit.hitNormal);
         normalize(&devia);
-        //ray->v = randomRayHemisphere(&hit.hitNormal);
+        // ray->v = randomRayHemisphere(&hit.hitNormal);
         ray->v = reflect(&ray->v, &devia);
-
+        ray->o = move(ray, 0.00000001).o; // Limiter l'acne
     }
-    clampColor(&res);
+    clampColor(&res, 0, .8);
     return res;
 }
 
-Color computeDirectLight(Scene *scene, HitInfo *hit)
+Color computeColor(Scene *scene, HitInfo *hit)
 {
     // couleur de l'éclairage direct de base
     Material mat = ((Material *)scene->materials.tab)[hit->materialIndice];
 
-    DynamicArray* lightArray = &scene->lights;
+    Color ambiant = multiplyColorc(&scene->ambiant, &mat.albedo);
+    Color diffuse = {0, 0, 0};
+    Color specular = {0, 0, 0};
 
     DynamicArray *lightArray = &scene->lights;
 
@@ -135,10 +139,15 @@ Color computeDirectLight(Scene *scene, HitInfo *hit)
         }
     }
 
-    //On a accumulé toutes les lumières au point d'impacte
-    clampColor(&directLight);
+    diffuse = multiplyColorc(&mat.albedo, &diffuse);
+    Color blanc = {1, 1, 1};
+    specular = multiplyColorc(&blanc, &specular);
 
-    return directLight;
+    // On a accumulé toutes les lumières au point d'impacte
+    // clampColor(&directLight, 0, 1);
+    Color res = addColor(&ambiant, &diffuse);
+    res = addColor(&res, &specular);
+    return res;
 }
 
 Color computeSkyColor(Scene *scene, Ray *ray)
@@ -147,53 +156,53 @@ Color computeSkyColor(Scene *scene, Ray *ray)
     Vector normalizedDirection = ray->v;
 
     double t = 0.5 * (normalizedDirection.y + 1.0);
-    Color horizon = {1, 1, 0.8};
+    Color horizon = {1, 1, 1};
+    //{1, 1, 0.8}
+    //mieux 1, 0.8823529, 0.7701960
 
-    Color tmpDeb = multiplyColord(&horizon, (1-t));
+    Color tmpDeb = multiplyColord(&horizon, (1 - t));
     Color tmpFin = multiplyColord(&scene->sky, t);
 
     Color skyColor = addColor(&tmpDeb, &tmpFin);
+    //Color skyColor = {0.3, 0.3, 0.5}; //Debug
 
     return skyColor;
 }
 
 HitInfo launchRay(Scene *scene, Ray *ray)
 {
-    
-    //On s'occupe de récupérer le plus proche model hit par le rayon
-    HitInfo closestHit = {NONE, -1, -1, DBL_MAX, {0,0,0}, {0,0,0}};
 
-    double closestDist = DBL_MAX;
+    // On s'occupe de récupérer le plus proche model hit par le rayon
+    HitInfo closestHit = {NONE, -1, -1, DBL_MAX, {0, 0, 0}, {0, 0, 0}, *ray};
 
-    //Array des Spheres
-    DynamicArray* sphereArray = &scene->spheres;
-    
-    //Pour chaque sphere
-    for(unsigned int i = 0; i < sphereArray->nb; ++i)
-    {   
-        Sphere *sphere = &((Sphere*) sphereArray->tab)[i];
+    // Array des Spheres
+    DynamicArray *sphereArray = &scene->spheres;
+
+    // Pour chaque sphere
+    for (unsigned int i = 0; i < sphereArray->nb; ++i)
+    {
+        Sphere *sphere = &((Sphere *)sphereArray->tab)[i];
 
         double tTmp = intersectSphere(ray, sphere);
-        
-        //printf("%lf\n", tTmp);
-        if(tTmp != -1)
+
+        // printf("%lf\n", tTmp);
+        if (tTmp > 0)
         {
-            //On récupère le point à l'intersection
+            // On récupère le point à l'intersection
             Vector hitPoint = move(ray, tTmp).o;
 
-            //Vecteur origine -> hitPoint
+            // Vecteur origine -> hitPoint
             Vector cHit = sub(&hitPoint, &ray->o);
-            //dist carré
+            // dist carré
             double dist = dot(&cHit, &cHit);
-            //printf("Colision!\n", tTmp);
-            //Colision
-            if(dist < closestDist)
+            // printf("Colision!\n", tTmp);
+            // Colision
+            if (dist < closestHit.distance2)
             {
-                closestDist = dist;
                 closestHit.type = SPHERE;
                 closestHit.modelIndice = i;
                 closestHit.materialIndice = sphere->materialIndice;
-                closestHit.distance = dist;
+                closestHit.distance2 = dist;
                 closestHit.hitPoint = hitPoint;
                 closestHit.hitNormal = sub(&hitPoint, &sphere->center);
 
@@ -206,44 +215,44 @@ HitInfo launchRay(Scene *scene, Ray *ray)
 
 void addModel(Scene *scene, Sphere *sphere)
 {
-    DynamicArray* sphereArray = &scene->spheres;
-    //Si la taille du tableau ne suffis plus, on l'agrandi de STEP
-    if(sphereArray->nb == sphereArray->max)
+    DynamicArray *sphereArray = &scene->spheres;
+    // Si la taille du tableau ne suffis plus, on l'agrandi de STEP
+    if (sphereArray->nb == sphereArray->max)
     {
         sphereArray->max += STEP;
         sphereArray->tab = realloc(sphereArray->tab, sphereArray->max * sizeof(Sphere));
     }
-    ((Sphere*) sphereArray->tab)[sphereArray->nb] = *sphere;
+    ((Sphere *)sphereArray->tab)[sphereArray->nb] = *sphere;
     sphereArray->nb++;
 }
 
 void addLight(Scene *scene, PointLight *pLight)
 {
-    DynamicArray* lightArray = &scene->lights;
-    //Si la taille du tableau ne suffis plus, on l'agrandi de STEP
-    if(lightArray->nb == lightArray->max)
+    DynamicArray *lightArray = &scene->lights;
+    // Si la taille du tableau ne suffis plus, on l'agrandi de STEP
+    if (lightArray->nb == lightArray->max)
     {
         lightArray->max += STEP;
         lightArray->tab = realloc(lightArray->tab, lightArray->max * sizeof(PointLight));
     }
 
-    ((PointLight*) lightArray->tab)[lightArray->nb] = *pLight;
+    ((PointLight *)lightArray->tab)[lightArray->nb] = *pLight;
     lightArray->nb++;
 }
 
 unsigned int addMaterial(Scene *scene, Material *pMat)
 {
-    DynamicArray* materialArray = &scene->materials;
-    //Si la taille du tableau ne suffis plus, on l'agrandi de STEP
-    if(materialArray->nb == materialArray->max)
+    DynamicArray *materialArray = &scene->materials;
+    // Si la taille du tableau ne suffis plus, on l'agrandi de STEP
+    if (materialArray->nb == materialArray->max)
     {
         materialArray->max += STEP;
         materialArray->tab = realloc(materialArray->tab, materialArray->max * sizeof(Material));
     }
 
-    //On sauvegarde le matériaux dans le tableau
-    ((Material*) materialArray->tab)[materialArray->nb] = *pMat;
+    // On sauvegarde le matériaux dans le tableau
+    ((Material *)materialArray->tab)[materialArray->nb] = *pMat;
     materialArray->nb++;
 
-    return (materialArray->nb-1);
+    return (materialArray->nb - 1);
 }
