@@ -2,11 +2,11 @@
 
 #include <math.h>
 
-void clampColor(Color *c)
+void clampColor(Color *c, double min, double max)
 {
-    c->r = fmin(1.0, fmax(0.0, c->r));
-    c->g = fmin(1.0, fmax(0.0, c->g));
-    c->b = fmin(1.0, fmax(0.0, c->b));
+    c->r = fmin(max, fmax(min, c->r));
+    c->g = fmin(max, fmax(min, c->g));
+    c->b = fmin(max, fmax(min, c->b));
 }
 
 Color addColor(Color *c1, Color *c2)
