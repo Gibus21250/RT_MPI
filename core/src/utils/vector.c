@@ -35,6 +35,18 @@ Vector randomRayHemisphere(Vector *normale)
     return randomDirection;
 }
 
+Vector randomUnit()
+{
+	Vector res = {
+		((double) rand() / RAND_MAX),
+		((double) rand() / RAND_MAX),
+		((double) rand() / RAND_MAX)
+	};
+
+	normalize(&res);
+	return res;
+}
+
 Vector randomFrom(double deb, double fin)
 {
 	double tx = ((double) rand() / RAND_MAX);
