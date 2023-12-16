@@ -100,69 +100,100 @@ int main(int argc, char const **argv)
             if (event.type == SDL_QUIT) {
                 running = 0;
             } else if (event.type == SDL_KEYDOWN) {
-            // Événement de pression de touche
-            switch (event.key.keysym.sym) {
-                case SDLK_z:
-                    // Déplacez la caméra vers l'avant (augmentez la position en Z)
-                    camera.position.z += PAS;
-                    break;
-                case SDLK_s:
-                    if (event.key.keysym.mod & KMOD_CTRL)
-                    {
-                        printf("Sauvegarde...\n");
-                        savePPMP6(ecran.screen, ecran.l, ecran.L, "premier6.ppm");
-                        printf("Sauvé!\n");
-                    } else
-                        camera.position.z -= PAS;
-                    break;
-                case SDLK_q:
-                    // Déplacez la caméra vers la gauche (diminuez la position en X)
-                    camera.position.x -= PAS;
-                    break;
-                case SDLK_d:
-                    // Déplacez la caméra vers la droite (augmentez la position en X)
-                    camera.position.x += PAS;
-                    break;
-                case SDLK_e:
-                    // Déplacez la caméra vers la gauche (diminuez la position en X)
-                    camera.position.y += PAS;
-                    break;
-                case SDLK_a:
-                    // Déplacez la caméra vers la droite (augmentez la position en X)
-                    camera.position.y -= PAS;
-                    break;
-                case SDLK_i:
-                    // Déplacez la caméra vers l'avant (augmentez la position en Z)
-                    camera.lookAt.z += PAS;
-                    break;
-                case SDLK_k:
-                    // Déplacez la caméra vers l'arrière (diminuez la position en Z)
-                    camera.lookAt.z -= PAS;
-                    break;
-                case SDLK_j:
-                    // Déplacez la caméra vers la gauche (diminuez la position en X)
-                    camera.lookAt.x -= PAS;
-                    break;
-                case SDLK_l:
-                    // Déplacez la caméra vers la droite (augmentez la position en X)
-                    camera.lookAt.x += PAS;
-                    break;
-                case SDLK_o:
-                    camera.lookAt.y += PAS;
-                    break;
-                case SDLK_u:
-                    camera.lookAt.y -= PAS;
-                    break;
-                case SDLK_SEMICOLON:
-                    camera.fov += 1;
-                    break;
-                case SDLK_COMMA:
-                    camera.fov -= 1;
-                    break;
+                char ok = 0;
+                double movex = 0, movey = 0, movez = 0;
+                switch (event.key.keysym.sym) {
+                    case SDLK_z:
+                        // Déplacez la caméra vers l'avant (augmentez la position en Z)
+                        //camera.position.z += PAS;
+                        movez += PAS;
+                        ok = 1;
+                        break;
+                    case SDLK_s:
+                        if (event.key.keysym.mod & KMOD_CTRL)
+                        {
+                            printf("Sauvegarde...\n");
+                            savePPMP6(ecran.screen, ecran.l, ecran.L, "premier6.ppm");
+                            printf("Sauvé!\n");
+                        } else
+                            movez -= PAS;
+                        ok = 1;
+                        break;
+                    case SDLK_q:
+                        // Déplacez la caméra vers la gauche (diminuez la position en X)
+                        movex -= PAS;
+                        //camera.position.x -= PAS;
+                        ok = 1;
+                        break;
+                    case SDLK_d:
+                        // Déplacez la caméra vers la droite (augmentez la position en X)
+                        //camera.position.x += PAS;
+                        movex += PAS;
+                        ok = 1;
+                        break;
+                    case SDLK_e:
+                        // Déplacez la caméra vers la gauche (diminuez la position en X)
+                        //camera.position.y += PAS;
+                        movey += PAS;
+                        ok = 1;
+                        break;
+                    case SDLK_a:
+                        // Déplacez la caméra vers la droite (augmentez la position en X)
+                        //camera.position.y -= PAS;
+                        movey -= PAS;
+                        ok = 1;
+                        break;
+                    case SDLK_i:
+                        // Déplacez la caméra vers l'avant (augmentez la position en Z)
+                        camera.lookAt.z += PAS;
+                        ok = 1;
+                        break;
+                    case SDLK_k:
+                        // Déplacez la caméra vers l'arrière (diminuez la position en Z)
+                        camera.lookAt.z -= PAS;
+                        ok = 1;
+                        break;
+                    case SDLK_j:
+                        // Déplacez la caméra vers la gauche (diminuez la position en X)
+                        camera.lookAt.x -= PAS;
+                        ok = 1;
+                        break;
+                    case SDLK_l:
+                        // Déplacez la caméra vers la droite (augmentez la position en X)
+                        camera.lookAt.x += PAS;
+                        ok = 1;
+                        break;
+                    case SDLK_o:
+                        camera.lookAt.y += PAS;
+                        ok = 1;
+                        break;
+                    case SDLK_u:
+                        camera.lookAt.y -= PAS;
+                        ok = 1;
+                        break;
+                    case SDLK_SEMICOLON:
+                        camera.fov += 1;
+                        ok = 1;
+                        break;
+                    case SDLK_COMMA:
+                        camera.fov -= 1;
+                        ok = 1;
+                        break;
+                }
+
+                if(ok)
+                {
+                    moveCamera(&camera, movex, movey, movez);
+                    clearScreen(&ecran);
+                }
+                    
+            } else if(event.type == SDL_MOUSEMOTION)
+            {
+                
             }
+    
         }
-        //printf("pos: %lf %lf %lf, lookat:%lf %lf %lf\n", camera.position.x, camera.position.y, camera.position.z, camera.lookAt.x, camera.lookAt.y, camera.lookAt.z);
-        }
+
         clock_t start, end;
         double cpu_time_used;
         start = clock();

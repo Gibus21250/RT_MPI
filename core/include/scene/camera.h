@@ -13,4 +13,6 @@ typedef struct {
 
 } Camera;
 
+void moveCamera(Camera *camera, double stepx, double stepy, double stepz);
+
 #endif
