@@ -48,22 +48,37 @@ int main(int argc, char const **argv)
     Material matx = {
         .type = DIFFUSE,
         .albedo = {1, 0, 0},
-        .roughness = 1.0
+        .roughness = 1,
+        .specular = {1, 1, 1},
+        .shininess = 1000
     };
     Material maty = {
         .type = DIFFUSE,
         .albedo = {0, 1, 0},
-        .roughness = 1.0
+        .roughness = 0.1,
+        .specular = {1, 1, 1},
+        .shininess = 1
     };
     Material matz = {
         .type = DIFFUSE,
-        .albedo = {0, 0, 1},
-        .roughness = 1.0
+        .albedo = {0, 0, 0},
+        .roughness = 0,
+        .specular = {1, 1, 1},
+        .shininess = 50
     };
     Material blanc = {
         .type = DIFFUSE,
         .albedo = {1, 1, 1},
-        .roughness = 0
+        .roughness = 1,
+        .specular = {0, 0, 0},
+        .shininess = 0.5
+    };
+    Material magenta = {
+        .type = DIFFUSE,
+        .albedo = {1, 0, 1},
+        .roughness = 1,
+        .specular = {0, 0, 0},
+        .shininess = 1
     };
 
     //On ajoute les matériaux à la scène
@@ -71,15 +86,14 @@ int main(int argc, char const **argv)
     unsigned int imaty = addMaterial(&scene, &maty);
     unsigned int imatz = addMaterial(&scene, &matz);
     unsigned int imatblanc = addMaterial(&scene, &blanc);
-
-    printf("%d %d %d %d\n", imatx, imaty, imatz, imatblanc);
+    unsigned int imatmagenta = addMaterial(&scene, &magenta);
 
     //On initialise les éléments de la scène
-    Sphere x = {{1, 0, 0}, 0.2, imatx};
-    Sphere y = {{0, 1, 0}, 0.2, imaty};
-    Sphere z = {{0, 0, 1}, 0.2, imatz};
-    Sphere centre = {{0, 0, 0}, 0.2, imatblanc};
-    Sphere test = {{0, -10.5, 0}, 10, imatblanc};
+    Sphere x = {{1, 0.2, 0}, 0.2, imatx};
+    Sphere y = {{0, 1.2, 0}, 0.2, imaty};
+    Sphere z = {{0, 0.2, 1}, 0.2, imatz};
+    Sphere centre = {{0, 0.2, 0}, 0.2, imatmagenta};
+    Sphere test = {{0, -10, 0}, 10, imatblanc};
 
     //On ajoute les éléments dans la scène
     addModel(&scene, &x);
@@ -88,11 +102,11 @@ int main(int argc, char const **argv)
     addModel(&scene, &centre);
     addModel(&scene, &test);
 
-    PointLight light = {{1, 1.5, 1}, 1, {1, 1, 1}};
+    PointLight light = {{-3, 3, 0}, 5, {1, 1, 1}}; //Soleil 0.972, .788, .411
     PointLight light2 = {{1, 1, 1}, 1, {1, 0, 0}};
     PointLight light3 = {{1, 0.5, 1}, 1, {0, 1, 0}};
 
-    //addLight(&scene, &light);
+    addLight(&scene, &light);
     //addLight(&scene, &light2);
     //addLight(&scene, &light3);
 
