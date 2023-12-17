@@ -43,7 +43,6 @@ Vector randomUnit()
 		((double) rand() / RAND_MAX)
 	};
 
-	normalize(&res);
 	return res;
 }
 
