@@ -28,7 +28,7 @@ void draw(Screen *screen, Camera *camera, Scene *scene)
     normalize(&direction);
     Vector right = cross(&up, &direction);
 
-    //Accumuler les samples infos
+    // On lance un rayon pour chaque pixel de l'écran
     for (unsigned int i = 0; i < screen->L; i++)
     {
         // Dessiner la ligne
@@ -50,11 +50,12 @@ void draw(Screen *screen, Camera *camera, Scene *scene)
             screen->accumulator[i * screen->l + j] = addColor(&screen->accumulator[i * screen->l + j], &pixelColor);
 
             //Actualiser l'affichage
-            screen->screen[i * screen->l + j] = multiplyColord(&screen->accumulator[i * screen->l + j], (1.0 / screen->nbSample));
+            Color accumulatedColor = screen->accumulator[i * screen->l + j];
+            accumulatedColor = multiplyColord(&accumulatedColor, 1./screen->nbSample);
+            clampColor(&accumulatedColor, 0, 1);
+            screen->screen[i * screen->l + j] = accumulatedColor;
         }
     }
-    //On incrémente le nb de sample
-    
 }
 
 void showResult(Screen *screen)
