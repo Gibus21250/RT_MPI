@@ -15,6 +15,9 @@
 
 #include "SDL2/SDL.h"
 
+int mouseX, mouseY;
+int prevMouseX, prevMouseY;
+
 int main(int argc, char const **argv)
 {
     //64 36 -> 16/9
@@ -26,15 +29,17 @@ int main(int argc, char const **argv)
     Scene scene = {
         .ambiant = {0.05, 0.05, 0.05},
         .sky = {0, 0.4, 0.7},
-        .maxBounces = 2
+        .maxBounces = 64
     };
 
+    //bleu clairs {0, 0.5, 0.8}
+
     Camera camera = {
-        .position = {1.5, 0, 1.5},
+        .position = {2, 2, 2},
         .lookAt = {0, 0, 0},
         .up = {0, 1, 0},
         .distance = 1,
-        .fov = 45
+        .fov = 90
     };
 
     initScreen(&ecran);
@@ -64,24 +69,35 @@ int main(int argc, char const **argv)
     };
     Material matz = {
         .type = DIFFUSE,
-        .albedo = {0, 0, 0},
+        .albedo = {0, 0, 1},
         .roughness = 0,
         .specular = {1, 1, 1},
         .shininess = 50
     };
     Material blanc = {
-        .type = DIFFUSE,
+        .type = DIFFUSE | EMISSIVE,
         .albedo = {1, 1, 1},
         .roughness = 1,
         .specular = {0, 0, 0},
-        .shininess = 0.5
+        .shininess = 0.5,
+        .emissionColor = {1, 1, 1},
+        .emissionPower = 1
     };
     Material magenta = {
         .type = DIFFUSE,
         .albedo = {1, 0, 1},
-        .roughness = 1,
+        .roughness = 0.5,
         .specular = {0, 0, 0},
         .shininess = 1
+    };
+    Material matsoleil = {
+        .type = DIFFUSE | EMISSIVE,
+        .albedo = {0.8, 0.5, 0.2},
+        .roughness = 1,
+        .specular = {0, 0, 0},
+        .shininess = 1,
+        .emissionColor = {0.8, 0.5, 0.2},
+        .emissionPower = 1
     };
 
     //On ajoute les matériaux à la scène
@@ -90,31 +106,40 @@ int main(int argc, char const **argv)
     unsigned int imatz = addMaterial(&scene, &matz);
     unsigned int imatblanc = addMaterial(&scene, &blanc);
     unsigned int imatmagenta = addMaterial(&scene, &magenta);
+    unsigned int imatsoleil = addMaterial(&scene, &matsoleil);
 
     //On initialise les éléments de la scène
     Sphere x = {{1, 0.2, 0}, 0.2, imatx};
     Sphere y = {{0, 1.2, 0}, 0.2, imaty};
     Sphere z = {{0, 0.2, 1}, 0.2, imatz};
-    Sphere centre = {{0, 0.2, 0}, 0.2, imatmagenta};
-    Sphere test = {{0, -10, 0}, 10, imatblanc};
+    Sphere centre = {{0, 0.2, 0}, 0.2, imatblanc};
+
+    Sphere sol = {{0, -10, 0}, 10, imatmagenta};
+    Sphere soleil = {{-20, 5, -20}, 20, imatsoleil};
 
     //On ajoute les éléments dans la scène
     addModel(&scene, &x);
     addModel(&scene, &y);
     addModel(&scene, &z);
     addModel(&scene, &centre);
-    addModel(&scene, &test);
 
-    PointLight light = {{-3, 3, 0}, 5, {1, 1, 1}}; //Soleil 0.972, .788, .411
+    addModel(&scene, &sol);
+    addModel(&scene, &soleil);
+    
+
+    PointLight light = {{-3, 3, 0}, 1000, {1, 1, 1}}; //Soleil 0.972, .788, .411
     PointLight light2 = {{1, 1, 1}, 1, {1, 0, 0}};
     PointLight light3 = {{1, 0.5, 1}, 1, {0, 1, 0}};
 
-    addLight(&scene, &light);
+    //addLight(&scene, &light);
     //addLight(&scene, &light2);
     //addLight(&scene, &light3);
 
     SDL_Event event;
     int running = 1;
+
+    Ray debug = {{-2, 0, 0}, {1, 0, 0}};
+    debugRay(&scene, &debug);
 
     while (running) {
         while (SDL_PollEvent(&event) != 0) {
