@@ -41,10 +41,10 @@ void destroyScene(Scene *scene)
 Color drawPixel(Scene *scene, Ray *ray)
 {
 
-    Color res = {0, 0, 0};
-    double energie = 1.0;
+    Color light = {0, 0, 0};
+    Color rayColor = {1.0, 1.0, 1.0};
 
-    // On va lancer, si possible, le rayon maximum bounce rebonds
+    // On boucle tant qu'on ne touche pas le ciel
     for (unsigned int i = 0; i < scene->maxBounces; ++i)
     {
         HitInfo hit = launchRay(scene, ray);
@@ -52,39 +52,42 @@ Color drawPixel(Scene *scene, Ray *ray)
         if (hit.type == NONE)
         {
             // si le rayon ne touche rien, on récupère la couleur du ciel
+            //Color sky = {.5, .5, .5};
             Color sky = computeSkyColor(scene, ray);
-            energie *= 0.5;
-            sky = multiplyColord(&sky, energie);
-            res = addColor(&res, &sky);
+            sky = multiplyColorc(&sky, &rayColor);
+            light = addColor(&light, &sky);
             break;
         }
         // On récupère le material touché
         Material matHit = ((Material *)scene->materials.tab)[hit.materialIndice];
 
         // En fonction du type de materiaux
-        Color directLight = computeColor(scene, &hit);
-        clampColor(&directLight, 0, 1);
+        if(matHit.type & EMISSIVE)
+        {
+            Color emission = multiplyColord(&matHit.emissionColor, matHit.emissionPower);
+            light = addColor(&light, &emission);
+        }
+        rayColor = multiplyColorc(&rayColor, &matHit.albedo);
 
-        directLight = multiplyColord(&directLight, energie);
-        // directLight = multiplyColorc(&matHit.albedo, &directLight);
-        res = addColor(&res, &directLight);
-
-        energie *= 0.5;
-
-        // On change l'origine du point et sa direction pour le prochain lancé
-        ray->o = hit.hitPoint;
+        //Oriente le rebonds spéculaire
         Vector random = randomFrom(-0.5, 0.5);
+        //Avec facteur en fonction du roughness
         Vector devia = mul(&random, matHit.roughness);
         devia = add(&devia, &hit.hitNormal);
         normalize(&devia);
-        // ray->v = randomRayHemisphere(&hit.hitNormal);
+
+        ray->o = hit.hitPoint;
+        //On recule le point par rapport à la normal du hit (pour limiter l'acne)
+        Vector bias = mul(&hit.hitNormal, 0.0000000001);
+        ray->o = add(&ray->o, &bias);
         ray->v = reflect(&ray->v, &devia);
-        ray->o = move(ray, 0.00000001).o; // Limiter l'acne
     }
-    clampColor(&res, 0, .8);
-    return res;
+    return light;
 }
 
+/**
+ * Soon useless
+*/
 Color computeColor(Scene *scene, HitInfo *hit)
 {
     // couleur de l'éclairage direct de base
@@ -107,7 +110,7 @@ Color computeColor(Scene *scene, HitInfo *hit)
         normalize(&toLight);
 
         Ray toLightRay = {hit->hitPoint, toLight};
-        toLightRay = move(&toLightRay, 0.0000001);
+        //toLightRay = move(&toLightRay, 0.0000001);
 
         HitInfo shadowHit = launchRay(scene, &toLightRay);
 
@@ -120,7 +123,7 @@ Color computeColor(Scene *scene, HitInfo *hit)
             if (cosTheta >= -1 && cosTheta <= M_PI_2)
             {
                 
-                double atenuation = 1. / (0.1 + distanceLight2);
+                double atenuation = 1. / distanceLight2;
                 // On calcule la couleur diffuse
                 double intensity = fmax(0.0, cosTheta) * pLight->intensity * atenuation;
                 Color lightColor = multiplyColord(&pLight->color, intensity);
@@ -128,7 +131,7 @@ Color computeColor(Scene *scene, HitInfo *hit)
                 diffuse = addColor(&diffuse, &lightColor);
 
                 // On calcule la couleur spéculaire
-                Vector R = reflect(&hit->ray.v, &hit->hitNormal);
+                Vector R = reflect(&hit->originalRay.v, &hit->hitNormal);
                 double coeff = dot(&R, &toLight);
                 coeff = fmax(coeff, 0);
                 coeff = pow(coeff, mat.shininess);
@@ -147,6 +150,8 @@ Color computeColor(Scene *scene, HitInfo *hit)
     // clampColor(&directLight, 0, 1);
     Color res = addColor(&ambiant, &diffuse);
     res = addColor(&res, &specular);
+
+    clampColor(&res, 0, 1);
     return res;
 }
 
@@ -156,7 +161,7 @@ Color computeSkyColor(Scene *scene, Ray *ray)
     Vector normalizedDirection = ray->v;
 
     double t = 0.5 * (normalizedDirection.y + 1.0);
-    Color horizon = {1, 1, 1};
+    Color horizon = {1, 0.8823529, 0.7701960};
     //{1, 1, 0.8}
     //mieux 1, 0.8823529, 0.7701960
 
@@ -260,7 +265,6 @@ HitInfo launchRay(Scene *scene, Ray *ray)
                 closestHit.distance2 = dist;
                 closestHit.hitPoint = hitPoint;
                 closestHit.hitNormal = sub(&hitPoint, &sphere->center);
-
                 normalize(&closestHit.hitNormal);
             }
         }
