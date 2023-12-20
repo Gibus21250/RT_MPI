@@ -22,8 +22,8 @@ int main(int argc, char const **argv)
 {
     //64 36 -> 16/9
     Screen ecran = {
-        .l = 720,
-        .L = 480
+        .l = 1920,
+        .L = 1080
     };
 
     Scene scene = {
@@ -86,14 +86,14 @@ int main(int argc, char const **argv)
     Material magenta = {
         .type = DIFFUSE,
         .albedo = {1, 0, 1},
-        .roughness = 0.5,
+        .roughness = 0.1,
         .specular = {0, 0, 0},
         .shininess = 1
     };
     Material matsoleil = {
         .type = DIFFUSE | EMISSIVE,
         .albedo = {0.8, 0.5, 0.2},
-        .roughness = 1,
+        .roughness = 0,
         .specular = {0, 0, 0},
         .shininess = 1,
         .emissionColor = {0.8, 0.5, 0.2},
@@ -133,155 +133,191 @@ int main(int argc, char const **argv)
 
     //addLight(&scene, &light);
     //addLight(&scene, &light2);
-    //addLight(&scene, &light3);
+    
+
+    //--------------- MPI ------------//
+
+    if(argc == 1)
+    {   
+        printf("Veuillez reseigner nombre de sample par images!\n");
+        return 0;
+    }
+
+    int nbSample = atoi(argv[1]);
+    ecran.maxSample = nbSample;
+
+    //Process info
+    int nbProcess, my_rank;
+
+    MPI_Status status;
+
+    MPI_Init(&argc, &argv);
+    MPI_Comm_size(MPI_COMM_WORLD, &nbProcess);
+
+    MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 
     SDL_Event event;
     int running = 1;
 
-    Ray debug = {{-2, 0, 0}, {1, 0, 0}};
-    debugRay(&scene, &debug);
-
     while (running) {
-        while (SDL_PollEvent(&event) != 0) {
-            if (event.type == SDL_QUIT) {
-                running = 0;
-            } else if (event.type == SDL_KEYDOWN) {
-                char ok = 0;
-                double movex = 0, movey = 0, movez = 0;
-                switch (event.key.keysym.sym) {
-                    case SDLK_z:
-                        // Déplacez la caméra vers l'avant (augmentez la position en Z)
-                        //camera.position.z += PAS;
-                        movez += PAS;
-                        ok = 1;
-                        break;
-                    case SDLK_s:
-                        if (event.key.keysym.mod & KMOD_CTRL)
-                        {
-                            printf("Sauvegarde...\n");
-                            savePPMP6(ecran.screen, ecran.l, ecran.L, "premier6.ppm");
-                            printf("Sauvé!\n");
-                        } else
-                            movez -= PAS;
-                        ok = 1;
-                        break;
-                    case SDLK_q:
-                        // Déplacez la caméra vers la gauche (diminuez la position en X)
-                        movex -= PAS;
-                        //camera.position.x -= PAS;
-                        ok = 1;
-                        break;
-                    case SDLK_d:
-                        // Déplacez la caméra vers la droite (augmentez la position en X)
-                        //camera.position.x += PAS;
-                        movex += PAS;
-                        ok = 1;
-                        break;
-                    case SDLK_e:
-                        // Déplacez la caméra vers la gauche (diminuez la position en X)
-                        //camera.position.y += PAS;
-                        movey += PAS;
-                        ok = 1;
-                        break;
-                    case SDLK_a:
-                        // Déplacez la caméra vers la droite (augmentez la position en X)
-                        //camera.position.y -= PAS;
-                        movey -= PAS;
-                        ok = 1;
-                        break;
-                    case SDLK_i:
-                        // Déplacez la caméra vers l'avant (augmentez la position en Z)
-                        camera.lookAt.z += PAS;
-                        ok = 1;
-                        break;
-                    case SDLK_k:
-                        // Déplacez la caméra vers l'arrière (diminuez la position en Z)
-                        camera.lookAt.z -= PAS;
-                        ok = 1;
-                        break;
-                    case SDLK_j:
-                        // Déplacez la caméra vers la gauche (diminuez la position en X)
-                        camera.lookAt.x -= PAS;
-                        ok = 1;
-                        break;
-                    case SDLK_l:
-                        // Déplacez la caméra vers la droite (augmentez la position en X)
-                        camera.lookAt.x += PAS;
-                        ok = 1;
-                        break;
-                    case SDLK_o:
-                        camera.lookAt.y += PAS;
-                        ok = 1;
-                        break;
-                    case SDLK_u:
-                        camera.lookAt.y -= PAS;
-                        ok = 1;
-                        break;
-                    case SDLK_SEMICOLON:
-                        camera.fov += 1;
-                        ok = 1;
-                        break;
-                    case SDLK_COMMA:
-                        camera.fov -= 1;
-                        ok = 1;
-                        break;
-                }
 
-                if(ok)
+        //Le process 0 s'occupe de l'affichage A CHANGER POUR PLUS TARD
+        if(my_rank == 0)
+        {
+
+            /**
+             * Init de la scène pour tous les autres processus
+            */
+
+            
+            while (SDL_PollEvent(&event) != 0) {
+                if (event.type == SDL_QUIT) {
+                    running = 0;
+                } else if (event.type == SDL_KEYDOWN) {
+                    char ok = 0;
+                    double movex = 0, movey = 0, movez = 0;
+                    switch (event.key.keysym.sym) {
+                        case SDLK_z:
+                            // Déplacez la caméra vers l'avant (augmentez la position en Z)
+                            //camera.position.z += PAS;
+                            movez += PAS;
+                            ok = 1;
+                            break;
+                        case SDLK_s:
+                            if (event.key.keysym.mod & KMOD_CTRL)
+                            {
+                                printf("Sauvegarde...\n");
+                                savePPMP6(ecran.screen, ecran.l, ecran.L, "premier6.ppm");
+                                printf("Sauvé!\n");
+                            } else
+                                movez -= PAS;
+                            ok = 1;
+                            break;
+                        case SDLK_q:
+                            // Déplacez la caméra vers la gauche (diminuez la position en X)
+                            movex -= PAS;
+                            //camera.position.x -= PAS;
+                            ok = 1;
+                            break;
+                        case SDLK_d:
+                            // Déplacez la caméra vers la droite (augmentez la position en X)
+                            //camera.position.x += PAS;
+                            movex += PAS;
+                            ok = 1;
+                            break;
+                        case SDLK_e:
+                            // Déplacez la caméra vers la gauche (diminuez la position en X)
+                            //camera.position.y += PAS;
+                            movey += PAS;
+                            ok = 1;
+                            break;
+                        case SDLK_a:
+                            // Déplacez la caméra vers la droite (augmentez la position en X)
+                            //camera.position.y -= PAS;
+                            movey -= PAS;
+                            ok = 1;
+                            break;
+                        case SDLK_i:
+                            // Déplacez la caméra vers l'avant (augmentez la position en Z)
+                            camera.lookAt.z += PAS;
+                            ok = 1;
+                            break;
+                        case SDLK_k:
+                            // Déplacez la caméra vers l'arrière (diminuez la position en Z)
+                            camera.lookAt.z -= PAS;
+                            ok = 1;
+                            break;
+                        case SDLK_j:
+                            // Déplacez la caméra vers la gauche (diminuez la position en X)
+                            camera.lookAt.x -= PAS;
+                            ok = 1;
+                            break;
+                        case SDLK_l:
+                            // Déplacez la caméra vers la droite (augmentez la position en X)
+                            camera.lookAt.x += PAS;
+                            ok = 1;
+                            break;
+                        case SDLK_o:
+                            camera.lookAt.y += PAS;
+                            ok = 1;
+                            break;
+                        case SDLK_u:
+                            camera.lookAt.y -= PAS;
+                            ok = 1;
+                            break;
+                        case SDLK_SEMICOLON:
+                            camera.fov += 1;
+                            ok = 1;
+                            break;
+                        case SDLK_COMMA:
+                            camera.fov -= 1;
+                            ok = 1;
+                            break;
+                    }
+
+                    if(ok)
+                    {
+                        moveCamera(&camera, movex, movey, movez);
+                        clearScreen(&ecran);
+                    }
+                        
+                } else if(event.type == SDL_MOUSEMOTION)
                 {
-                    moveCamera(&camera, movex, movey, movez);
-                    clearScreen(&ecran);
-                }
                     
-            } else if(event.type == SDL_MOUSEMOTION)
-            {
-                
+                }
+        
             }
-    
-        }
 
-        clock_t start, end;
-        double cpu_time_used;
-        start = clock();
-        draw(&ecran, &camera, &scene);
-        end = clock();
-        // Calculez le temps passé en secondes
-        cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
+            /*
+            clock_t start, end;
+            double cpu_time_used;
+            start = clock();
+            draw(&ecran, &camera, &scene);
+            end = clock();
+            // Calculez le temps passé en secondes
+            cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
 
-        // Affichez le temps
-        printf("Temps écoulé : %f secondes\n", cpu_time_used);
-        //clear
-        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+            // Affichez le temps
+            printf("Temps écoulé : %f secondes\n", cpu_time_used);
+            */
 
-        for (unsigned int i = 0; i < ecran.L; i++) {
-            for (unsigned int j = 0; j < ecran.l; j++) {
-                Color pixelColor = ecran.screen[i * ecran.l + j];
 
-                // Convertissez la couleur de votre matrice en valeurs RGBA pour SDL
-                Uint8 r = (Uint8)(pixelColor.r * 255);
-                Uint8 g = (Uint8)(pixelColor.g * 255);
-                Uint8 b = (Uint8)(pixelColor.b * 255);
-                Uint8 a = 255;  // La transparence est à 255 (complètement opaque)
+            
+            SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 
-                // Dessinez le pixel avec la couleur convertie
-                SDL_SetRenderDrawColor(renderer, r, g, b, a);
-                SDL_RenderDrawPoint(renderer, j, i);  // Notez que j et i sont inversés ici, assurez-vous que cela convient à votre matrice
+            for (unsigned int i = 0; i < ecran.L; i++) {
+                for (unsigned int j = 0; j < ecran.l; j++) {
+                    Color pixelColor = ecran.screen[i * ecran.l + j];
+
+                    // Convertissez la couleur de votre matrice en valeurs RGBA pour SDL
+                    Uint8 r = (Uint8)(pixelColor.r * 255);
+                    Uint8 g = (Uint8)(pixelColor.g * 255);
+                    Uint8 b = (Uint8)(pixelColor.b * 255);
+                    Uint8 a = 255;  // La transparence est à 255 (complètement opaque)
+
+                    // Dessinez le pixel avec la couleur convertie
+                    SDL_SetRenderDrawColor(renderer, r, g, b, a);
+                    SDL_RenderDrawPoint(renderer, j, i);  // Notez que j et i sont inversés ici, assurez-vous que cela convient à votre matrice
+                }
             }
+
+            // Mettez à jour le rendu
+            SDL_RenderPresent(renderer);
+
+            sprintf(title, "Ray Tracing (Pas encore MPI) - %d bounces | samples: %d", scene.maxBounces, ecran.nbSample);
+            SDL_SetWindowTitle(window, title);
+
+            // Ajoutez une petite pause pour limiter la fréquence d'affichage (facultatif)
+            SDL_Delay(16);
         }
+        else
+        {
 
-        // Mettez à jour le rendu
-        SDL_RenderPresent(renderer);
-
-        sprintf(title, "Ray Tracing (Pas encore MPI) - %d bounces | samples: %d", scene.maxBounces, ecran.nbSample);
-        SDL_SetWindowTitle(window, title);
-
-        // Ajoutez une petite pause pour limiter la fréquence d'affichage (facultatif)
-        SDL_Delay(16);
+        }
+        
     }
-    //showResult(&ecran);
+
     printf("finit\n");
-    //savePPMP6(ecran.screen, ecran.l, ecran.L, "premier6.ppm");
-    //savePPMP3(ecran.screen, ecran.l, ecran.L, "premier3.ppm");
 
     destroyScreen(&ecran);
     destroyScene(&scene);

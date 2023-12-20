@@ -10,6 +10,7 @@
 typedef struct Screen {
     unsigned int l, L;
     unsigned int nbSample;
+    unsigned int maxSample;
     Color *screen;
     Color *accumulator;
 } Screen;

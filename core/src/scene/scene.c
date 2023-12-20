@@ -65,7 +65,7 @@ Color drawPixel(Scene *scene, Ray *ray)
         if(matHit.type & EMISSIVE)
         {
             Color emission = multiplyColord(&matHit.emissionColor, matHit.emissionPower);
-            light = addColor(&light, &emission);
+            light = addColor(&light, &emission);    
         }
         rayColor = multiplyColorc(&rayColor, &matHit.albedo);
 
