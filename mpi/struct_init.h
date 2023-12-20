@@ -3,7 +3,6 @@
 
 #include "struct_types/struct_type_all.h"
 
-void createAllStruct();
-void commitAllStruct();
+void initMPIStruct();
 
 #endif
