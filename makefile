@@ -7,7 +7,7 @@ BIN_DIR = bin
 
 MPIC = mpicc
 CC = gcc
-CFLAGS = -Wall -Wpadded -Wextra -g -p -I$(CORE_INCLUDE)
+CFLAGS = -Wall -Wpadded -O3 -Wextra -g -I$(CORE_INCLUDE)
 
 #Prendre tous les fichier sources de core
 SOURCES := $(wildcard $(CORE_SRC)/**/*.c $(CORE_SRC)/*.c)
