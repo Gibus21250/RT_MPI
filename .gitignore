@@ -3,3 +3,4 @@ start
 bin/
 build/
 **.ppm
+*.txt

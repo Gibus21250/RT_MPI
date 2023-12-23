@@ -22,8 +22,8 @@ int main(int argc, char const **argv)
 {
     //64 36 -> 16/9
     Screen ecran = {
-        .l = 720,
-        .L = 480
+        .l = 1920,
+        .L = 1080
     };
 
     Scene scene = {
