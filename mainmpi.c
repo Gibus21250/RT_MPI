@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <time.h>
 
 #include "screen/screen.h"
 
@@ -9,26 +8,56 @@
 #include "models/material.h"
 #include "models/sphere.h"
 
+#include "exporter/saver.h"
+
 //MPI
 #include <mpi.h>
 
 #include "struct_types/struct_type_all.h"
 #include "struct_init.h"
+#include "reduce_utils.h"
 
 
 int main(int argc, char const *argv[])
 {
     if(argc == 1)
     {   
-        printf("Veuillez reseigner nombre de sample max par images!\n");
+        printf("Veuillez renseigner nombre de sample max par images!\n");
         return 0;
     }
 
+    //Process info
+    int nbProcess, my_rank, nbTotalSample;;
+
+    MPI_Status status;
+
+    MPI_Init(&argc, &argv);
+    MPI_Comm_size(MPI_COMM_WORLD, &nbProcess);
+
+    MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+
+    srand(my_rank);
+
+    nbTotalSample = atoi(argv[1]);
+    unsigned nbSamplePerProcess =  nbTotalSample / nbProcess;
+
+    if(my_rank == 0)
+    {
+        printf("Rendu de %d samples: %u samples pour %d process\n", nbTotalSample, nbSamplePerProcess, nbProcess);
+    }
+    
     Screen ecran = {
-        .l = 720,
-        .L = 480,
+        .l = 1920,
+        .L = 1080,
         .nbSample = 0,
-        .maxSample = atoi(argv[1])          //On définie le nombre de sample par image
+        .maxSample = nbSamplePerProcess          //On définie le nombre de sample par processus
+    };
+
+    Screen ecranResult = {
+        .l = 1920,
+        .L = 1080,
+        .nbSample = nbTotalSample,
+        .maxSample = nbTotalSample          //On définie le nombre de sample par processus
     };
 
     Scene scene = {
@@ -36,8 +65,6 @@ int main(int argc, char const *argv[])
         .sky = {0, 0.4, 0.7},
         .maxBounces = 64
     };
-
-    //bleu clairs {0, 0.5, 0.8}
 
     Camera camera = {
         .position = {2, 2, 2},
@@ -47,26 +74,42 @@ int main(int argc, char const *argv[])
         .fov = 90
     };
 
-    //Process info
-    int nbProcess, my_rank;
-
-    MPI_Status status;
-
-    MPI_Init(&argc, &argv);
-    MPI_Comm_size(MPI_COMM_WORLD, &nbProcess);
-
-    MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
-
     initMPIStruct();
-
-    //On diffuse du 0 vers tous les autres processus
-    MPI_Bcast(&ecran, 1, MPI_SCREEN_STRUCT, 0, MPI_COMM_WORLD);
-    MPI_Bcast(&scene, 1, MPI_SCENE_STRUCT, 0, MPI_COMM_WORLD);
-    MPI_Bcast(&camera, 1, MPI_CAMERA_STRUCT, 0, MPI_COMM_WORLD);
+    initReduceOp();
 
     //Chaque process initializera son ecran, et sa scènes
     initScreen(&ecran);
     initScene(&scene);
+
+    if(my_rank == 0)
+    {
+        initScreen(&ecranResult);
+    }
+
+    // On commence par initialiser les materiaux:
+    Material matx = {
+        .type = DIFFUSE,
+        .albedo = {1, 0, 0},
+        .roughness = 1,
+        .specular = {1, 1, 1},
+        .shininess = 1000
+    };
+
+    Material maty = {
+        .type = DIFFUSE,
+        .albedo = {0, 1, 0},
+        .roughness = 0.1,
+        .specular = {1, 1, 1},
+        .shininess = 1
+    };
+
+    Material matz = {
+        .type = DIFFUSE,
+        .albedo = {0, 0, 1},
+        .roughness = 0,
+        .specular = {1, 1, 1},
+        .shininess = 50
+    };
 
     Material blanc = {
         .type = DIFFUSE | EMISSIVE,
@@ -76,55 +119,73 @@ int main(int argc, char const *argv[])
         .shininess = 0.5,
         .emissionColor = {1, 1, 1},
         .emissionPower = 1
-        };
+    };
 
     Material magenta = {
         .type = DIFFUSE,
         .albedo = {1, 0, 1},
-        .roughness = 0.1,
+        .roughness = 0.5,
         .specular = {0, 0, 0},
         .shininess = 1
-        };
+    };
 
-    MPI_Bcast(&blanc, 1, MPI_MATERIAL_STRUCT, 0, MPI_COMM_WORLD);
-    MPI_Bcast(&magenta, 1, MPI_MATERIAL_STRUCT, 0, MPI_COMM_WORLD);
+    Material matsoleil = {
+        .type = DIFFUSE | EMISSIVE,
+        .albedo = {0.8, 0.5, 0.2},
+        .roughness = 1,
+        .specular = {0, 0, 0},
+        .shininess = 1,
+        .emissionColor = {0.8, 0.5, 0.2},
+        .emissionPower = 1
+    };
     
+    // On ajoute les matériaux à la scène
+    unsigned int imatx = addMaterial(&scene, &matx);
+    unsigned int imaty = addMaterial(&scene, &maty);
+    unsigned int imatz = addMaterial(&scene, &matz);
     unsigned int imatblanc = addMaterial(&scene, &blanc);
     unsigned int imatmagenta = addMaterial(&scene, &magenta);
+    unsigned int imatsoleil = addMaterial(&scene, &matsoleil);
 
     // On initialise les éléments de la scène
-    Sphere s1 = {{0, 1, 0}, 1, imatblanc};
-    Sphere sol = {{0, -10.5, 0}, 10, imatmagenta};
+    Sphere x = {{1, 0.2, 0}, 0.2, imatx};
+    Sphere y = {{0, 1.2, 0}, 0.2, imaty};
+    Sphere z = {{0, 0.2, 1}, 0.2, imatz};
+    Sphere centre = {{0, 0.2, 0}, 0.2, imatblanc};
 
-    MPI_Bcast(&s1, 1, MPI_SPHERE_STRUCT, 0, MPI_COMM_WORLD);
-    MPI_Bcast(&sol, 1, MPI_SPHERE_STRUCT, 0, MPI_COMM_WORLD);
+    Sphere sol = {{0, -10, 0}, 10, imatmagenta};
+    Sphere soleil = {{-20, 5, -20}, 20, imatsoleil};
 
-    addModel(&scene, &s1);
+    // On ajoute les éléments dans la scène
+    addModel(&scene, &x);
+    addModel(&scene, &y);
+    addModel(&scene, &z);
+    addModel(&scene, &centre);
+
     addModel(&scene, &sol);
+    addModel(&scene, &soleil);
 
     while(ecran.nbSample < ecran.maxSample)
     {
-        clock_t start, end;
-        double cpu_time_used;
-        start = clock();
+        //Cette fonction additionne une couleur de ecran.accumulator pour chaque appels
         draw(&ecran, &camera, &scene);
-        end = clock();
-        // Calculez le temps passé en secondes
-        cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
-
-        // Affichez le temps
-        printf("Temps écoulé : %f secondes\n", cpu_time_used);
     }
 
+    MPI_Reduce(ecran.accumulator, ecranResult.accumulator, ecran.L * ecran.l, MPI_COLOR_STRUCT, ACCUMULATOR_REDUCE_OP, 0, MPI_COMM_WORLD);
+    
+    //On rassemble le résultat de tous les process
+    if(my_rank == 0)
+    {
+        updateRendered(&ecranResult);
+        savePPMP6(ecranResult.screen, ecranResult.l, ecranResult.L, "testReduceMPI.ppm");
+        destroyScreen(&ecranResult);
+    }
+    
     destroyScreen(&ecran);
     destroyScene(&scene);
 
+    deleteReduceOp();
     freeMPIStruct();
     MPI_Finalize();
     return 0;
 }
-
-/*
-  
-
-*/
