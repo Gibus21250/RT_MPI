@@ -22,8 +22,8 @@ int main(int argc, char const **argv)
 {
     // 64 36 -> 16/9
     Screen ecran = {
-        .l = 1920,
-        .L = 1080};
+        .l = 720,
+        .L = 480};
 
     Scene scene = {
         .ambiant = {0.05, 0.05, 0.05},
@@ -56,18 +56,21 @@ int main(int argc, char const **argv)
         .roughness = 1,
         .specular = {1, 1, 1},
         .shininess = 1000};
+
     Material maty = {
         .type = DIFFUSE,
         .albedo = {0, 1, 0},
         .roughness = 0.1,
         .specular = {1, 1, 1},
         .shininess = 1};
+
     Material matz = {
         .type = DIFFUSE,
         .albedo = {0, 0, 1},
         .roughness = 0,
         .specular = {1, 1, 1},
         .shininess = 50};
+
     Material blanc = {
         .type = DIFFUSE | EMISSIVE,
         .albedo = {1, 1, 1},
@@ -76,16 +79,18 @@ int main(int argc, char const **argv)
         .shininess = 0.5,
         .emissionColor = {1, 1, 1},
         .emissionPower = 1};
+
     Material magenta = {
         .type = DIFFUSE,
         .albedo = {1, 0, 1},
-        .roughness = 0.1,
+        .roughness = 0.5,
         .specular = {0, 0, 0},
         .shininess = 1};
+
     Material matsoleil = {
         .type = DIFFUSE | EMISSIVE,
         .albedo = {0.8, 0.5, 0.2},
-        .roughness = 0,
+        .roughness = 1,
         .specular = {0, 0, 0},
         .shininess = 1,
         .emissionColor = {0.8, 0.5, 0.2},
@@ -158,7 +163,9 @@ int main(int argc, char const **argv)
                     if (event.key.keysym.mod & KMOD_CTRL)
                     {
                         printf("Sauvegarde...\n");
-                        savePPMP6(ecran.screen, ecran.l, ecran.L, "premier6.ppm");
+                        char titre[20];
+                        sprintf(titre, "res%d.ppm", ecran.nbSample);
+                        savePPMP6(ecran.screen, ecran.l, ecran.L, titre);
                         printf("Sauvé!\n");
                     }
                     else
@@ -238,18 +245,18 @@ int main(int argc, char const **argv)
             }
         }
 
-        
         clock_t start, end;
         double cpu_time_used;
         start = clock();
         draw(&ecran, &camera, &scene);
         end = clock();
         // Calculez le temps passé en secondes
-        cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
+        cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
 
         // Affichez le temps
         printf("Temps écoulé : %f secondes\n", cpu_time_used);
 
+        updateRendered(&ecran);
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 
         for (unsigned int i = 0; i < ecran.L; i++)
