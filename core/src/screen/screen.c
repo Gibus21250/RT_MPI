@@ -85,7 +85,7 @@ void showResult(Screen *screen)
 void initScreen(Screen *screen)
 {
     screen->screen = (Color *)malloc(screen->l * screen->L * sizeof(Color));
-    screen->accumulator = (Color *)malloc(screen->l * screen->L * sizeof(Color));
+    screen->accumulator = (Color *)calloc(screen->l * screen->L, sizeof(Color));
 }
 
 void clearScreen(Screen *screen)
