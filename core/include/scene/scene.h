@@ -13,7 +13,7 @@ typedef enum {
 } ModelType;
 
 typedef struct DynamicArray {
-    void* tab;
+    void *tab;
     unsigned int nb;
     unsigned int max;
 } DynamicArray;

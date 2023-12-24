@@ -15,8 +15,6 @@
 
 void draw(Screen *screen, Camera *camera, Scene *scene)
 {
-    screen->nbSample++;
-    
     double biaisx = (double)1 / screen->L;
     double biaisy = (double)1 / screen->l;
 
@@ -47,8 +45,21 @@ void draw(Screen *screen, Camera *camera, Scene *scene)
             Ray ray = {camera->position, rayDirection};
             Color pixelColor = drawPixel(scene, &ray);
 
+            //On ajoute le résultat du pixel dans l'accumulateur
             screen->accumulator[i * screen->l + j] = addColor(&screen->accumulator[i * screen->l + j], &pixelColor);
 
+        }
+    }
+    //On incrémente le nombre de sample calculés
+    screen->nbSample++;
+}
+
+void updateRendered(Screen *screen)
+{
+    for (unsigned int i = 0; i < screen->L; i++)
+    {
+        for (unsigned int j = 0; j < screen->l; ++j)
+        {
             //Actualiser l'affichage
             Color accumulatedColor = screen->accumulator[i * screen->l + j];
             accumulatedColor = multiplyColord(&accumulatedColor, 1./screen->nbSample);
@@ -74,7 +85,7 @@ void showResult(Screen *screen)
 void initScreen(Screen *screen)
 {
     screen->screen = (Color *)malloc(screen->l * screen->L * sizeof(Color));
-    screen->accumulator = (Color *)malloc(screen->l * screen->L * sizeof(Color));
+    screen->accumulator = (Color *)calloc(screen->l * screen->L, sizeof(Color));
 }
 
 void clearScreen(Screen *screen)
