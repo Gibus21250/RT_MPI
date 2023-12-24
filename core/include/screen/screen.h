@@ -7,7 +7,8 @@
 #include "scene/scene.h"
 #include "scene/camera.h"
 
-typedef struct Screen {
+typedef struct Screen
+{
     unsigned int l, L;
     unsigned int nbSample;
     unsigned int maxSample;
@@ -17,17 +18,18 @@ typedef struct Screen {
 
 /**
  * Aloue la mémoire nécéssaire pour gérer l'écran
-*/
+ */
 void initScreen(Screen *screen);
 void clearScreen(Screen *screen);
 void destroyScreen(Screen *screen);
 
-//Remplie l'écran de couleur des rayons envoyé à travers la scène
-void draw(Screen* screen, Camera *camera, Scene *scene);
+// Une itération d'un lancé de rayon sur tout l'écran, stocké dans l'accumulateur
+void draw(Screen *screen, Camera *camera, Scene *scene);
+void updateRendered(Screen *screen);
 
 /**
  * Print les valeurs des pixels dans stdout !!! Debug de dernier recours
-*/
+ */
 void showResult(Screen *screen);
 
 #endif
