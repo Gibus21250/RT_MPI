@@ -184,7 +184,7 @@ int main(int argc, char const *argv[])
         tm_info = localtime(&t);
 
         char date_str[50];
-        strftime(date_str, sizeof(date_str), "%m-%d-%H:%M:%S", tm_info);
+        strftime(date_str, sizeof(date_str), "%m-%d-%H%M%S", tm_info);
 
         char result_str[60];
         sprintf(result_str, "%s-%d.ppm", date_str, ecranResult.maxSample);
