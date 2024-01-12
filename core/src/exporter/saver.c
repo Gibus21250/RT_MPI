@@ -34,6 +34,7 @@ char savePPMP6(Color *image, unsigned int l, unsigned int L, char *name)
         return 1;
     }
     else
+    printf("Erreur sauvegarde fichier!\n");
         return 0;
 }
 
