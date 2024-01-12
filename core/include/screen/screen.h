@@ -10,10 +10,7 @@
 typedef struct Screen
 {
     unsigned int l, L;
-    unsigned int nbSample;
-    unsigned int maxSample;
     Color *screen;
-    Color *accumulator;
 } Screen;
 
 /**
@@ -22,10 +19,6 @@ typedef struct Screen
 void initScreen(Screen *screen);
 void clearScreen(Screen *screen);
 void destroyScreen(Screen *screen);
-
-// Une itération d'un lancé de rayon sur tout l'écran, stocké dans l'accumulateur
-void draw(Screen *screen, Camera *camera, Scene *scene);
-void updateRendered(Screen *screen);
 
 /**
  * Print les valeurs des pixels dans stdout !!! Debug de dernier recours
