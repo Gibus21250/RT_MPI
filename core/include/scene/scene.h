@@ -22,11 +22,8 @@ typedef struct DynamicArray {
 
 typedef struct Scene {
     DynamicArray spheres;
-    DynamicArray lights;
     DynamicArray materials;
-    Color ambiant;
     Color sky;
-    unsigned int maxBounces;
 } Scene;
 
 typedef struct HitInfo {
@@ -52,22 +49,13 @@ void* pointerFrom(Scene *scene, ModelType type, unsigned int ind);
 */
 unsigned int addMaterial(Scene *scene, Material *mat);
 
-Color computeSkyColor(Scene *scene, Ray *ray);
-
 /**
- * Renvoie une structure contenant les infos d'un hit
+ * Renvoie une structure contenant les infos d'un hit de la scène
 */
 HitInfo launchRay(Scene *scene, Ray *ray);
 /**
  * Lance un rayon dans la scène, et décris tous ce qu'il touche
 */
 HitInfo debugRay(Scene *scene, Ray *ray);
-Color drawPixel(Scene *scene, Ray *ray);
-
-/**
- * Calcule la couleur au point hit:
- * Ambiant + diffuse + specular
-*/
-Color computeColor(Scene *scene, HitInfo *hit);
 
 #endif
