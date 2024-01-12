@@ -9,6 +9,7 @@
 
 typedef enum {
     NONE,
+    CAMERA,
     SPHERE
 } ModelType;
 
@@ -41,8 +42,10 @@ typedef struct HitInfo {
 void initScene(Scene *scene);
 void destroyScene(Scene *scene);
 
-void addModel(Scene *scene, Sphere *sphere);
+unsigned int addModel(Scene *scene, Sphere *sphere);
 void addLight(Scene *scene, PointLight *pLight);
+
+void* pointerFrom(Scene *scene, ModelType type, unsigned int ind);
 
 /**
  * Ajoute dans la tableau des matériaux de la scène, le matériaux en argument, et renvoie son indice
@@ -63,7 +66,7 @@ Color drawPixel(Scene *scene, Ray *ray);
 
 /**
  * Calcule la couleur au point hit:
- * Abiant + diffuse + specular
+ * Ambiant + diffuse + specular
 */
 Color computeColor(Scene *scene, HitInfo *hit);
 
