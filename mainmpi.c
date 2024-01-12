@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <time.h>
 
 #include "screen/screen.h"
 
@@ -47,15 +48,15 @@ int main(int argc, char const *argv[])
     }
     
     Screen ecran = {
-        .l = 1920,
-        .L = 1080,
+        .l = 7680,
+        .L = 4320,
         .nbSample = 0,
         .maxSample = nbSamplePerProcess          //On définie le nombre de sample par processus
     };
 
     Screen ecranResult = {
-        .l = 1920,
-        .L = 1080,
+        .l = 7680,
+        .L = 4320,
         .nbSample = nbTotalSample,
         .maxSample = nbTotalSample          //On définie le nombre de sample par processus
     };
@@ -173,11 +174,23 @@ int main(int argc, char const *argv[])
 
     MPI_Reduce(ecran.accumulator, ecranResult.accumulator, ecran.L * ecran.l, MPI_COLOR_STRUCT, ACCUMULATOR_REDUCE_OP, 0, MPI_COMM_WORLD);
     
-    //On rassemble le résultat de tous les process
+    //On rassemble le résultat de tous les process, et on sauvegarde
     if(my_rank == 0)
     {
+        time_t t;
+        struct tm *tm_info;
+
+        time(&t);
+        tm_info = localtime(&t);
+
+        char date_str[50];
+        strftime(date_str, sizeof(date_str), "%m-%d-%H%M%S", tm_info);
+
+        char result_str[60];
+        sprintf(result_str, "%s-%d.ppm", date_str, ecranResult.maxSample);
+
         updateRendered(&ecranResult);
-        savePPMP6(ecranResult.screen, ecranResult.l, ecranResult.L, "testReduceMPI.ppm");
+        savePPMP6(ecranResult.screen, ecranResult.l, ecranResult.L, result_str);
         destroyScreen(&ecranResult);
     }
     

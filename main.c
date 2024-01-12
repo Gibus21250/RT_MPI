@@ -7,6 +7,7 @@
 #include "scene/camera.h"
 #include "scene/light.h"
 #include "models/material.h"
+#include "animator/animator.h"
 
 #define PAS 0.1
 
@@ -39,8 +40,11 @@ int main(int argc, char const **argv)
         .distance = 1,
         .fov = 90};
 
+    Animator animator;
+
     initScreen(&ecran);
     initScene(&scene);
+    initAnimator(&animator);
 
     const char title[100];
     sprintf(title, "Ray Tracing (Pas encore MPI) - %d bounces | samples: %d", scene.maxBounces, ecran.nbSample);
@@ -117,19 +121,23 @@ int main(int argc, char const **argv)
     addModel(&scene, &x);
     addModel(&scene, &y);
     addModel(&scene, &z);
-    addModel(&scene, &centre);
+    unsigned int centreI = addModel(&scene, &centre);
 
     addModel(&scene, &sol);
     addModel(&scene, &soleil);
 
-    PointLight light = {{-3, 3, 0}, 1000, {1, 1, 1}}; // Soleil 0.972, .788, .411
-    PointLight light2 = {{1, 1, 1}, 1, {1, 0, 0}};
-    PointLight light3 = {{1, 0.5, 1}, 1, {0, 1, 0}};
+    //Ajouter les models à animer, à l'Animator
+    void* pCentre = pointerFrom(&scene, SPHERE, centreI);
+    Vector vitesseCentre = {0, 1, 0};
+
+    addMovableElement(&animator, SPHERE, pCentre, &vitesseCentre);
+
+    //PointLight light = {{-3, 3, 0}, 1000, {1, 1, 1}}; // Soleil 0.972, .788, .411
+    //PointLight light2 = {{1, 1, 1}, 1, {1, 0, 0}};
+    //PointLight light3 = {{1, 0.5, 1}, 1, {0, 1, 0}};
 
     // addLight(&scene, &light);
     // addLight(&scene, &light2);
-
-    //--------------- MPI ------------//
 
     SDL_Event event;
     int running = 1;
@@ -232,6 +240,14 @@ int main(int argc, char const **argv)
                     camera.fov -= 1;
                     ok = 1;
                     break;
+                case SDLK_t:
+                    updatePosition(&animator, 0.1);
+                    clearScreen(&ecran);
+                    break;
+                case SDLK_r:
+                    updatePosition(&animator, -0.1);
+                    clearScreen(&ecran);
+                    break;
                 }
 
                 if (ok)
@@ -291,5 +307,6 @@ int main(int argc, char const **argv)
 
     destroyScreen(&ecran);
     destroyScene(&scene);
+    destroyAnimator(&animator);
     return 0;
 }
