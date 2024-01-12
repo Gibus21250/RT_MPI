@@ -32,11 +32,11 @@ void draw(Screen *screen, Camera *camera, Scene *scene)
         // Dessiner la ligne
         for (unsigned int j = 0; j < screen->l; ++j)
         {
-            //On commence en haut à gauvhe, et on lance un rayon au hasard dans le pixel
+            // On commence en haut à gauche, et on lance un rayon au hasard dans le pixel (Monte Carlo)
             double xEcran = 2 * ((double)j / screen->l) - 1;
-            xEcran += biaisx * rand() / RAND_MAX;
+            xEcran += biaisx * ((double) rand()) / RAND_MAX;
             double yEcran = 1 - 2 * ((double)i / screen->L);
-            yEcran -= biaisy * rand() / RAND_MAX;
+            yEcran -= biaisy * ((double) rand()) / RAND_MAX;
 
             Vector rm = mul(&right, xEcran * halfFOV * aspect);
             Vector um = mul(&up, yEcran * halfFOV);
@@ -45,16 +45,14 @@ void draw(Screen *screen, Camera *camera, Scene *scene)
             normalize(&rayDirection);
 
             Ray ray = {camera->position, rayDirection};
-            
-            //Color pixelColor = {xEcran, yEcran, 0};
+
             Color pixelColor = drawPixel(scene, &ray);
 
-            //On ajoute le résultat du pixel dans l'accumulateur
+            // On ajoute le résultat du pixel dans l'accumulateur
             screen->accumulator[i * screen->l + j] = addColor(&screen->accumulator[i * screen->l + j], &pixelColor);
-
         }
     }
-    //On incrémente le nombre de sample calculés
+    // On incrémente le nombre de sample calculés
     screen->nbSample++;
 }
 
@@ -64,9 +62,9 @@ void updateRendered(Screen *screen)
     {
         for (unsigned int j = 0; j < screen->l; ++j)
         {
-            //Actualiser l'affichage
+            // Actualiser l'affichage
             Color accumulatedColor = screen->accumulator[i * screen->l + j];
-            accumulatedColor = multiplyColord(&accumulatedColor, 1./screen->nbSample);
+            accumulatedColor = multiplyColord(&accumulatedColor, 1. / screen->nbSample);
             clampColor(&accumulatedColor, 0, 1);
             screen->screen[i * screen->l + j] = accumulatedColor;
         }
