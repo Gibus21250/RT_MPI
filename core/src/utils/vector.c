@@ -3,7 +3,13 @@
 #include <math.h>
 #include <stdlib.h>
 
+#ifdef __AVX2__
+	#include <immintrin.h>
+	#include <avx2intrin.h>
+#endif
+
 #include "utils/math.h"
+
 
 Vector randomRayHemisphere(Vector *normale)
 {
@@ -63,7 +69,27 @@ Vector randomFrom(double deb, double fin)
 
 double dot(Vector* u, Vector* v)
 {
-	return u->x * v->x + u->y * v->y + u->z * v->z;
+	#ifdef __AVX2__
+		
+		__m256d u_vec = _mm256_loadu_pd((double*) &u->x);
+        __m256d v_vec = _mm256_loadu_pd((double*) &v->x);
+
+        // Multiplier les composants des vecteurs
+        __m256d result = _mm256_mul_pd(u_vec, v_vec);
+
+        // Addition horizontale des éléments
+        result = _mm256_add_pd(result, _mm256_permute2f128_pd(result, result, 0x1));
+        result = _mm256_hadd_pd(result, result);
+        
+        // Extraire le résultat
+        double dot_product = _mm256_cvtsd_f64(result);
+
+        return dot_product;
+
+	#else
+		return u->x * v->x + u->y * v->y + u->z * v->z;
+	#endif
+	
 }
 
 void normalize(Vector* u)
