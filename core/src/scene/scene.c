@@ -247,7 +247,7 @@ HitInfo launchRay(Scene *scene, Ray *ray)
 
         // printf("%lf\n", tTmp);
         if (tTmp > 0)
-        {
+        {   
             // On récupère le point à l'intersection
             Vector hitPoint = move(ray, tTmp).o;
 
@@ -266,13 +266,29 @@ HitInfo launchRay(Scene *scene, Ray *ray)
                 closestHit.hitPoint = hitPoint;
                 closestHit.hitNormal = sub(&hitPoint, &sphere->center);
                 normalize(&closestHit.hitNormal);
+
             }
         }
     }
     return closestHit;
 }
 
-void addModel(Scene *scene, Sphere *sphere)
+void* pointerFrom(Scene *scene, ModelType type, unsigned int ind)
+{
+    switch (type)
+    {
+    case SPHERE:
+        DynamicArray *sphereArray = &scene->spheres;
+        //printf("Pointer asked: %p\n", &((Sphere *)sphereArray->tab)[sphereArray->nb]);
+        return &((Sphere *)sphereArray->tab)[ind];
+        break;
+    
+    default:
+        break;
+    }
+}
+
+unsigned int addModel(Scene *scene, Sphere *sphere)
 {
     DynamicArray *sphereArray = &scene->spheres;
     // Si la taille du tableau ne suffis plus, on l'agrandi de STEP
@@ -283,6 +299,8 @@ void addModel(Scene *scene, Sphere *sphere)
     }
     ((Sphere *)sphereArray->tab)[sphereArray->nb] = *sphere;
     sphereArray->nb++;
+
+    return sphereArray->nb-1;
 }
 
 void addLight(Scene *scene, PointLight *pLight)
