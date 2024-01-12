@@ -3,16 +3,21 @@
 #include <time.h>
 
 #include "screen/screen.h"
+
 #include "scene/scene.h"
 #include "scene/camera.h"
 #include "scene/light.h"
-#include "models/material.h"
-#include "animator/animator.h"
 
-#define PAS 0.1
+#include "renderer/renderer.h"
+
+#include "models/material.h"
+
+#include "animator/animator.h"
 
 #include "utils/color.h"
 #include "exporter/saver.h"
+
+#define PAS 0.1
 
 #include "SDL2/SDL.h"
 
@@ -27,11 +32,7 @@ int main(int argc, char const **argv)
         .L = 480};
 
     Scene scene = {
-        .ambiant = {0.05, 0.05, 0.05},
-        .sky = {0, 0.4, 0.7},
-        .maxBounces = 64};
-
-    // bleu clairs {0, 0.5, 0.8}
+        .sky = {0, 0.4, 0.7}}; // bleu clair {0, 0.5, 0.8}
 
     Camera camera = {
         .position = {2, 2, 2},
@@ -40,18 +41,27 @@ int main(int argc, char const **argv)
         .distance = 1,
         .fov = 90};
 
+    Renderer renderer = {
+        .l = ecran.l,
+        .L = ecran.L,
+        .maxSample = INT32_MAX,
+        .currentSample = 0,
+        .maxBounces = 64
+    };
+
     Animator animator;
 
     initScreen(&ecran);
     initScene(&scene);
+    initRenderer(&renderer);
     initAnimator(&animator);
 
     const char title[100];
-    sprintf(title, "Ray Tracing (Pas encore MPI) - %d bounces | samples: %d", scene.maxBounces, ecran.nbSample);
+    sprintf(title, "Monte Carlo Path Tracing - %d bounces | samples: %d", renderer.maxBounces, renderer.currentSample);
 
     SDL_Init(SDL_INIT_VIDEO);
-    SDL_Window *window = SDL_CreateWindow(title, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, ecran.l, ecran.L, SDL_WINDOW_SHOWN);
-    SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+    SDL_Window *sdl_window = SDL_CreateWindow(title, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, ecran.l, ecran.L, SDL_WINDOW_SHOWN);
+    SDL_Renderer *sdl_renderer = SDL_CreateRenderer(sdl_window, -1, SDL_RENDERER_ACCELERATED);
 
     // On commence par initialiser les materiaux:
     Material matx = {
@@ -126,18 +136,12 @@ int main(int argc, char const **argv)
     addModel(&scene, &sol);
     addModel(&scene, &soleil);
 
-    //Ajouter les models à animer, à l'Animator
-    void* pCentre = pointerFrom(&scene, SPHERE, centreI);
+    // Ajouter les models à animer, à l'Animator
+    void *pCentre = pointerFrom(&scene, SPHERE, centreI);
     Vector vitesseCentre = {0, 1, 0};
 
     addMovableElement(&animator, SPHERE, pCentre, &vitesseCentre);
 
-    //PointLight light = {{-3, 3, 0}, 1000, {1, 1, 1}}; // Soleil 0.972, .788, .411
-    //PointLight light2 = {{1, 1, 1}, 1, {1, 0, 0}};
-    //PointLight light3 = {{1, 0.5, 1}, 1, {0, 1, 0}};
-
-    // addLight(&scene, &light);
-    // addLight(&scene, &light2);
 
     SDL_Event event;
     int running = 1;
@@ -172,7 +176,7 @@ int main(int argc, char const **argv)
                     {
                         printf("Sauvegarde...\n");
                         char titre[20];
-                        sprintf(titre, "res%d.ppm", ecran.nbSample);
+                        sprintf(titre, "res%d.ppm", renderer.currentSample);
                         savePPMP6(ecran.screen, ecran.l, ecran.L, titre);
                         printf("Sauvé!\n");
                     }
@@ -181,46 +185,34 @@ int main(int argc, char const **argv)
                     ok = 1;
                     break;
                 case SDLK_q:
-                    // Déplacez la caméra vers la gauche (diminuez la position en X)
                     movex -= PAS;
-                    // camera.position.x -= PAS;
                     ok = 1;
                     break;
                 case SDLK_d:
-                    // Déplacez la caméra vers la droite (augmentez la position en X)
-                    // camera.position.x += PAS;
                     movex += PAS;
                     ok = 1;
                     break;
                 case SDLK_e:
-                    // Déplacez la caméra vers la gauche (diminuez la position en X)
-                    // camera.position.y += PAS;
                     movey += PAS;
                     ok = 1;
                     break;
                 case SDLK_a:
-                    // Déplacez la caméra vers la droite (augmentez la position en X)
-                    // camera.position.y -= PAS;
                     movey -= PAS;
                     ok = 1;
                     break;
                 case SDLK_i:
-                    // Déplacez la caméra vers l'avant (augmentez la position en Z)
                     camera.lookAt.z += PAS;
                     ok = 1;
                     break;
                 case SDLK_k:
-                    // Déplacez la caméra vers l'arrière (diminuez la position en Z)
                     camera.lookAt.z -= PAS;
                     ok = 1;
                     break;
                 case SDLK_j:
-                    // Déplacez la caméra vers la gauche (diminuez la position en X)
                     camera.lookAt.x -= PAS;
                     ok = 1;
                     break;
                 case SDLK_l:
-                    // Déplacez la caméra vers la droite (augmentez la position en X)
                     camera.lookAt.x += PAS;
                     ok = 1;
                     break;
@@ -242,18 +234,18 @@ int main(int argc, char const **argv)
                     break;
                 case SDLK_t:
                     updatePosition(&animator, 0.1);
-                    clearScreen(&ecran);
+                    clearAccumulator(&renderer);
                     break;
                 case SDLK_r:
                     updatePosition(&animator, -0.1);
-                    clearScreen(&ecran);
+                    clearAccumulator(&renderer);
                     break;
                 }
 
                 if (ok)
                 {
                     moveCamera(&camera, movex, movey, movez);
-                    clearScreen(&ecran);
+                    clearAccumulator(&renderer);
                 }
             }
             else if (event.type == SDL_MOUSEMOTION)
@@ -264,7 +256,7 @@ int main(int argc, char const **argv)
         clock_t start, end;
         double cpu_time_used;
         start = clock();
-        draw(&ecran, &camera, &scene);
+        render(&renderer, &scene, &camera);
         end = clock();
         // Calculez le temps passé en secondes
         cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
@@ -272,8 +264,8 @@ int main(int argc, char const **argv)
         // Affichez le temps
         printf("Temps écoulé : %f secondes\n", cpu_time_used);
 
-        updateRendered(&ecran);
-        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+        updateResult(&renderer, &ecran);
+        SDL_SetRenderDrawColor(sdl_renderer, 0, 0, 0, 255);
 
         for (unsigned int i = 0; i < ecran.L; i++)
         {
@@ -288,16 +280,16 @@ int main(int argc, char const **argv)
                 Uint8 a = 255; // La transparence est à 255 (complètement opaque)
 
                 // Dessinez le pixel avec la couleur convertie
-                SDL_SetRenderDrawColor(renderer, r, g, b, a);
-                SDL_RenderDrawPoint(renderer, j, i); // Notez que j et i sont inversés ici, assurez-vous que cela convient à votre matrice
+                SDL_SetRenderDrawColor(sdl_renderer, r, g, b, a);
+                SDL_RenderDrawPoint(sdl_renderer, j, i); // Notez que j et i sont inversés ici, assurez-vous que cela convient à votre matrice
             }
         }
 
         // Mettez à jour le rendu
-        SDL_RenderPresent(renderer);
+        SDL_RenderPresent(sdl_renderer);
 
-        sprintf(title, "Ray Tracing (Pas encore MPI) - %d bounces | samples: %d", scene.maxBounces, ecran.nbSample);
-        SDL_SetWindowTitle(window, title);
+        sprintf(title, "Ray Tracing (Pas encore MPI) - %d bounces | samples: %d", renderer.maxBounces, renderer.currentSample);
+        SDL_SetWindowTitle(sdl_window, title);
 
         // Ajoutez une petite pause pour limiter la fréquence d'affichage (facultatif)
         SDL_Delay(16);
@@ -308,5 +300,7 @@ int main(int argc, char const **argv)
     destroyScreen(&ecran);
     destroyScene(&scene);
     destroyAnimator(&animator);
+    destroyRenderer(&renderer);
+
     return 0;
 }

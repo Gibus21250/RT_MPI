@@ -3,13 +3,15 @@
 
 #include "screen/screen.h"
 
-#include "scene/camera.h"
 #include "scene/scene.h"
+#include "scene/camera.h"
+#include "scene/light.h"
+
+#include "renderer/renderer.h"
 
 #include "models/material.h"
-#include "models/sphere.h"
 
-#include "exporter/saver.h"
+#include "animator/animator.h"
 
 //MPI
 #include <mpi.h>
@@ -47,44 +49,45 @@ int main(int argc, char const *argv[])
         printf("Rendu de %d samples: %u samples pour %d process\n", nbTotalSample, nbSamplePerProcess, nbProcess);
     }
     
-    Screen ecran = {
-        .l = 7680,
-        .L = 4320,
-        .nbSample = 0,
-        .maxSample = nbSamplePerProcess          //On définie le nombre de sample par processus
+    Renderer renderer = {
+        .l = 1920,
+        .L = 1080,
+        .maxSample = nbSamplePerProcess,
+        .currentSample = 0,
+        .maxBounces = 64
     };
 
-    Screen ecranResult = {
-        .l = 7680,
-        .L = 4320,
-        .nbSample = nbTotalSample,
-        .maxSample = nbTotalSample          //On définie le nombre de sample par processus
+    Renderer rendererGlobal = {
+        .l = renderer.l,
+        .L = renderer.L,
+        .maxSample = nbTotalSample,
+        .currentSample = nbTotalSample,
+        .maxBounces = 64
     };
 
     Scene scene = {
-        .ambiant = {0.05, 0.05, 0.05},
-        .sky = {0, 0.4, 0.7},
-        .maxBounces = 64
-    };
+        .sky = {0, 0.4, 0.7}}; // bleu clair {0, 0.5, 0.8}
 
     Camera camera = {
         .position = {2, 2, 2},
         .lookAt = {0, 0, 0},
         .up = {0, 1, 0},
         .distance = 1,
-        .fov = 90
-    };
+        .fov = 90};
 
+    Animator animator;
+    
     initMPIStruct();
     initReduceOp();
 
-    //Chaque process initializera son ecran, et sa scènes
-    initScreen(&ecran);
+    //Chaque process initializera son ecran, et sa scènes, son renderer
     initScene(&scene);
+    initRenderer(&renderer);
+    initAnimator(&animator);
 
     if(my_rank == 0)
     {
-        initScreen(&ecranResult);
+        initRenderer(&rendererGlobal);
     }
 
     // On commence par initialiser les materiaux:
@@ -166,13 +169,14 @@ int main(int argc, char const *argv[])
     addModel(&scene, &sol);
     addModel(&scene, &soleil);
 
-    while(ecran.nbSample < ecran.maxSample)
+    while(renderer.currentSample < renderer.maxSample)
     {
         //Cette fonction additionne une couleur de ecran.accumulator pour chaque appels
-        draw(&ecran, &camera, &scene);
+        render(&renderer, &scene, &camera);
     }
 
-    MPI_Reduce(ecran.accumulator, ecranResult.accumulator, ecran.L * ecran.l, MPI_COLOR_STRUCT, ACCUMULATOR_REDUCE_OP, 0, MPI_COMM_WORLD);
+    //On reduce, dans l'accumulator que le root a créé
+    MPI_Reduce(renderer.accumulator, rendererGlobal.accumulator, renderer.L * renderer.l, MPI_COLOR_STRUCT, ACCUMULATOR_REDUCE_OP, 0, MPI_COMM_WORLD);
     
     //On rassemble le résultat de tous les process, et on sauvegarde
     if(my_rank == 0)
@@ -187,15 +191,30 @@ int main(int argc, char const *argv[])
         strftime(date_str, sizeof(date_str), "%m-%d-%H%M%S", tm_info);
 
         char result_str[60];
-        sprintf(result_str, "%s-%d.ppm", date_str, ecranResult.maxSample);
+        sprintf(result_str, "%s-%d.ppm", date_str, rendererGlobal.maxSample);
 
-        updateRendered(&ecranResult);
-        savePPMP6(ecranResult.screen, ecranResult.l, ecranResult.L, result_str);
-        destroyScreen(&ecranResult);
+        //Le root initialise un écran
+        Screen ecran = {
+            .l = renderer.l,
+            .L = renderer.L
+        };
+
+        initScreen(&ecran);
+
+        //Il remplie son écran avec le résultat de l'accumulation de sample
+        updateResult(&rendererGlobal, &ecran);
+
+        //On sauvegarde
+        savePPMP6(ecran.screen, ecran.l, ecran.L, result_str);
+
+        //Root détruit son écran
+        destroyScreen(&ecran);
+        destroyRenderer(&rendererGlobal);
+
     }
     
-    destroyScreen(&ecran);
     destroyScene(&scene);
+    destroyRenderer(&renderer);
 
     deleteReduceOp();
     freeMPIStruct();
