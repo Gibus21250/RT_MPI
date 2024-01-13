@@ -4,6 +4,8 @@
 #include "utils/math.h"
 #include "models/material.h"
 
+#include "renderer/intersector.h"
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <float.h>
@@ -20,6 +22,10 @@ void initScene(Scene *scene)
     scene->spheres.nb = 0;
     scene->spheres.max = STEP;
 
+    scene->tores.tab = malloc(STEP * sizeof(Tore));
+    scene->tores.nb = 0;
+    scene->tores.max = STEP;
+
     // On init le tableau des materiaux
     scene->materials.tab = malloc(STEP * sizeof(Material));
     scene->materials.nb = 0;
@@ -29,6 +35,7 @@ void initScene(Scene *scene)
 void destroyScene(Scene *scene)
 {
     free(scene->spheres.tab);
+    free(scene->tores.tab);
     free(scene->materials.tab);
 }
 
@@ -84,22 +91,61 @@ HitInfo debugRay(Scene *scene, Ray *ray)
             }
         }
     }
+
+    DynamicArray *array = &scene->tores;
+    Vector toreNormal = {0, 0, 0};
+    //Pour chaque Tore
+    for (unsigned int i = 0; i < array->nb; ++i)
+    {
+        Tore *tore = &((Tore *)array->tab)[i];
+
+        double tTmp = intersectTore(ray, tore, &toreNormal);
+        printf("\tClosest t: %lf\n", tTmp);
+
+        // printf("%lf\n", tTmp);
+        if (tTmp > 0)
+        {   
+            // On récupère le point à l'intersection
+            Vector hitPoint = move(ray, tTmp).o;
+            printf("\t\tPosition hit: %lf %lf %lf\n", hitPoint.x, hitPoint.y, hitPoint.z);
+            // Vecteur origine -> hitPoint
+            Vector cHit = sub(&hitPoint, &ray->o);
+            printf("\t\tVecteur cHit: %lf %lf %lf\n", cHit.x, cHit.y, cHit.z);
+            // dist carré
+            double dist = dot(&cHit, &cHit);
+
+            printf("\t\tDistance2 origine -> hitPoint: %lf\n", dist);
+            // printf("Colision!\n", tTmp);
+            // Colision
+            if (dist < closestHit.distance2)
+            {
+                closestHit.type = TORE;
+                closestHit.modelIndice = i;
+                closestHit.materialIndice = tore->materialIndice;
+                closestHit.distance2 = dist;
+                closestHit.hitPoint = hitPoint;
+                closestHit.hitNormal = toreNormal;
+                normalize(&closestHit.hitNormal);
+
+            }
+        }
+    }
+    
     return closestHit;
 }
 
 HitInfo launchRay(Scene *scene, Ray *ray)
 {
-
     // On s'occupe de récupérer le plus proche model hit par le rayon
     HitInfo closestHit = {NONE, -1, -1, DBL_MAX, {0, 0, 0}, {0, 0, 0}, *ray};
 
     // Array des Spheres
-    DynamicArray *sphereArray = &scene->spheres;
+    DynamicArray *array = &scene->spheres;
 
     // Pour chaque sphere
-    for (unsigned int i = 0; i < sphereArray->nb; ++i)
+    for (unsigned int i = 0; i < array->nb; ++i)
     {
-        Sphere *sphere = &((Sphere *)sphereArray->tab)[i];
+        Sphere *sphere = &((Sphere *)array->tab)[i];
 
         double tTmp = intersectSphere(ray, sphere);
 
@@ -128,6 +174,42 @@ HitInfo launchRay(Scene *scene, Ray *ray)
             }
         }
     }
+
+    array = &scene->tores;
+    Vector toreNormal = {0, 0, 0};
+    //Pour chaque Tore
+    for (unsigned int i = 0; i < array->nb; ++i)
+    {
+        Tore *tore = &((Tore *)array->tab)[i];
+
+        double tTmp = intersectTore(ray, tore, &toreNormal);
+
+        // printf("%lf\n", tTmp);
+        if (tTmp > 0)
+        {   
+            // On récupère le point à l'intersection
+            Vector hitPoint = move(ray, tTmp).o;
+
+            // Vecteur origine -> hitPoint
+            Vector cHit = sub(&hitPoint, &ray->o);
+            // dist carré
+            double dist = dot(&cHit, &cHit);
+            // printf("Colision!\n", tTmp);
+            // Colision
+            if (dist < closestHit.distance2)
+            {
+                closestHit.type = TORE;
+                closestHit.modelIndice = i;
+                closestHit.materialIndice = tore->materialIndice;
+                closestHit.distance2 = dist;
+                closestHit.hitPoint = hitPoint;
+                closestHit.hitNormal = toreNormal;
+                normalize(&closestHit.hitNormal);
+
+            }
+        }
+    }
+
     return closestHit;
 }
 
