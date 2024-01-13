@@ -10,6 +10,8 @@
 #include "renderer/renderer.h"
 
 #include "models/material.h"
+#include "models/sphere.h"
+#include "models/tore.h"
 
 #include "animator/animator.h"
 
