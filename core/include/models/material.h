@@ -14,10 +14,8 @@ typedef struct Material
 {
     MaterialType type;
     Color albedo;
-    Color specular;             //Pour phong
     double roughness;           //Spéculaire biais
     double metalness;           //Pas encore utilisé
-    double shininess;           //Pour phong
     double refractionFactor;    //Pas encore utilisé
     double emissionPower;       //Puissance d'emission (0 --> 1)
     Color emissionColor;        //Couleur d'emission
