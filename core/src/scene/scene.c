@@ -146,19 +146,36 @@ void* pointerFrom(Scene *scene, ModelType type, unsigned int ind)
     }
 }
 
-unsigned int addModel(Scene *scene, Sphere *sphere)
+unsigned int addModel(Scene *scene, void *element, ModelType type)
 {
-    DynamicArray *sphereArray = &scene->spheres;
-    // Si la taille du tableau ne suffis plus, on l'agrandi de STEP
-    if (sphereArray->nb == sphereArray->max)
+    DynamicArray *array = 0;
+    
+    switch (type)
     {
-        sphereArray->max += STEP;
-        sphereArray->tab = realloc(sphereArray->tab, sphereArray->max * sizeof(Sphere));
+    case SPHERE:
+        array = &scene->spheres;
+        // Si la taille du tableau ne suffis plus, on l'agrandi de STEP
+        if (array->nb == array->max)
+        {
+            array->max += STEP;
+            array->tab = realloc(array->tab, array->max * sizeof(Sphere));
+        }
+        ((Sphere *)array->tab)[array->nb] = *((Sphere*) element);
+        break;
+    case TORE:
+        array = &scene->tores;
+        // Si la taille du tableau ne suffis plus, on l'agrandi de STEP
+        if (array->nb == array->max)
+        {
+            array->max += STEP;
+            array->tab = realloc(array->tab, array->max * sizeof(Tore));
+        }
+        ((Tore *)array->tab)[array->nb] = *((Tore*) element);
+        break;
     }
-    ((Sphere *)sphereArray->tab)[sphereArray->nb] = *sphere;
-    sphereArray->nb++;
 
-    return sphereArray->nb-1;
+    array->nb++;
+    return array->nb-1;
 }
 
 unsigned int addMaterial(Scene *scene, Material *pMat)
