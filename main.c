@@ -46,8 +46,7 @@ int main(int argc, char const **argv)
         .L = ecran.L,
         .maxSample = INT32_MAX,
         .currentSample = 0,
-        .maxBounces = 64
-    };
+        .maxBounces = 4};
 
     Animator animator;
 
@@ -67,48 +66,42 @@ int main(int argc, char const **argv)
     Material matx = {
         .type = DIFFUSE,
         .albedo = {1, 0, 0},
-        .roughness = 1,
-        .specular = {1, 1, 1},
-        .shininess = 1000};
+        .roughness = 1};
 
     Material maty = {
         .type = DIFFUSE,
         .albedo = {0, 1, 0},
-        .roughness = 0.1,
-        .specular = {1, 1, 1},
-        .shininess = 1};
+        .roughness = 0.1};
 
     Material matz = {
         .type = DIFFUSE,
         .albedo = {0, 0, 1},
-        .roughness = 0,
-        .specular = {1, 1, 1},
-        .shininess = 50};
+        .roughness = 0};
 
     Material blanc = {
         .type = DIFFUSE | EMISSIVE,
         .albedo = {1, 1, 1},
         .roughness = 1,
-        .specular = {0, 0, 0},
-        .shininess = 0.5,
         .emissionColor = {1, 1, 1},
         .emissionPower = 1};
 
     Material magenta = {
         .type = DIFFUSE,
         .albedo = {1, 0, 1},
-        .roughness = 0.5,
-        .specular = {0, 0, 0},
-        .shininess = 1};
+        .roughness = 1};
 
     Material matsoleil = {
         .type = DIFFUSE | EMISSIVE,
         .albedo = {0.8, 0.5, 0.2},
         .roughness = 1,
-        .specular = {0, 0, 0},
-        .shininess = 1,
         .emissionColor = {0.8, 0.5, 0.2},
         .emissionPower = 1};
+
+    Material matTore = {
+        .type = DIFFUSE | EMISSIVE,
+        .albedo = {0.5, .8, .9},
+        .roughness = .2
+    };
 
     // On ajoute les matériaux à la scène
     unsigned int imatx = addMaterial(&scene, &matx);
@@ -117,6 +110,7 @@ int main(int argc, char const **argv)
     unsigned int imatblanc = addMaterial(&scene, &blanc);
     unsigned int imatmagenta = addMaterial(&scene, &magenta);
     unsigned int imatsoleil = addMaterial(&scene, &matsoleil);
+    unsigned int imatTore = addMaterial(&scene, &matTore);
 
     // On initialise les éléments de la scène
     Sphere x = {{1, 0.2, 0}, 0.2, imatx};
@@ -128,20 +122,28 @@ int main(int argc, char const **argv)
     Sphere soleil = {{-20, 5, -20}, 20, imatsoleil};
 
     // On ajoute les éléments dans la scène
-    addModel(&scene, &x);
-    addModel(&scene, &y);
-    addModel(&scene, &z);
-    unsigned int centreI = addModel(&scene, &centre);
+    //addModel(&scene, &x, SPHERE);
+    //addModel(&scene, &y, SPHERE);
+    //addModel(&scene, &z, SPHERE);
+    //unsigned int centreI = addModel(&scene, &centre, SPHERE);
 
-    addModel(&scene, &sol);
-    addModel(&scene, &soleil);
+    addModel(&scene, &sol, SPHERE);
+    addModel(&scene, &soleil, SPHERE);
+
+    Tore test = {
+        {1, .3, 1},
+        {0, 1, 0},
+        0.05,
+        0.2,
+        imatTore};
+
+    addModel(&scene, &test, TORE);
 
     // Ajouter les models à animer, à l'Animator
-    void *pCentre = pointerFrom(&scene, SPHERE, centreI);
+    // void *pCentre = pointerFrom(&scene, SPHERE, centreI);
     Vector vitesseCentre = {0, 1, 0};
 
-    addMovableElement(&animator, SPHERE, pCentre, &vitesseCentre);
-
+    // addMovableElement(&animator, SPHERE, pCentre, &vitesseCentre);
 
     SDL_Event event;
     int running = 1;
@@ -288,7 +290,7 @@ int main(int argc, char const **argv)
         // Mettez à jour le rendu
         SDL_RenderPresent(sdl_renderer);
 
-        sprintf(title, "Ray Tracing (Pas encore MPI) - %d bounces | samples: %d", renderer.maxBounces, renderer.currentSample);
+        sprintf(title, "Monte Carlo Path Tracing - %d bounces | samples: %d", renderer.maxBounces, renderer.currentSample);
         SDL_SetWindowTitle(sdl_window, title);
 
         // Ajoutez une petite pause pour limiter la fréquence d'affichage (facultatif)

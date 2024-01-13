@@ -50,8 +50,8 @@ int main(int argc, char const *argv[])
     }
     
     Renderer renderer = {
-        .l = 1920,
-        .L = 1080,
+        .l = 720,
+        .L = 480,
         .maxSample = nbSamplePerProcess,
         .currentSample = 0,
         .maxBounces = 64
@@ -94,55 +94,43 @@ int main(int argc, char const *argv[])
     Material matx = {
         .type = DIFFUSE,
         .albedo = {1, 0, 0},
-        .roughness = 1,
-        .specular = {1, 1, 1},
-        .shininess = 1000
-    };
+        .roughness = 1};
 
     Material maty = {
         .type = DIFFUSE,
         .albedo = {0, 1, 0},
-        .roughness = 0.1,
-        .specular = {1, 1, 1},
-        .shininess = 1
-    };
+        .roughness = 0.1};
 
     Material matz = {
         .type = DIFFUSE,
         .albedo = {0, 0, 1},
-        .roughness = 0,
-        .specular = {1, 1, 1},
-        .shininess = 50
-    };
+        .roughness = 0};
 
     Material blanc = {
         .type = DIFFUSE | EMISSIVE,
         .albedo = {1, 1, 1},
         .roughness = 1,
-        .specular = {0, 0, 0},
-        .shininess = 0.5,
         .emissionColor = {1, 1, 1},
-        .emissionPower = 1
-    };
+        .emissionPower = 1};
 
     Material magenta = {
         .type = DIFFUSE,
         .albedo = {1, 0, 1},
-        .roughness = 0.5,
-        .specular = {0, 0, 0},
-        .shininess = 1
-    };
+        .roughness = 1};
 
     Material matsoleil = {
         .type = DIFFUSE | EMISSIVE,
         .albedo = {0.8, 0.5, 0.2},
         .roughness = 1,
-        .specular = {0, 0, 0},
-        .shininess = 1,
         .emissionColor = {0.8, 0.5, 0.2},
-        .emissionPower = 1
+        .emissionPower = 1};
+
+    Material matTore = {
+        .type = DIFFUSE | EMISSIVE,
+        .albedo = {0.5, .8, .9},
+        .roughness = .2
     };
-    
+
     // On ajoute les matériaux à la scène
     unsigned int imatx = addMaterial(&scene, &matx);
     unsigned int imaty = addMaterial(&scene, &maty);
@@ -150,6 +138,7 @@ int main(int argc, char const *argv[])
     unsigned int imatblanc = addMaterial(&scene, &blanc);
     unsigned int imatmagenta = addMaterial(&scene, &magenta);
     unsigned int imatsoleil = addMaterial(&scene, &matsoleil);
+    unsigned int imatTore = addMaterial(&scene, &matTore);
 
     // On initialise les éléments de la scène
     Sphere x = {{1, 0.2, 0}, 0.2, imatx};
@@ -161,13 +150,22 @@ int main(int argc, char const *argv[])
     Sphere soleil = {{-20, 5, -20}, 20, imatsoleil};
 
     // On ajoute les éléments dans la scène
-    addModel(&scene, &x);
-    addModel(&scene, &y);
-    addModel(&scene, &z);
-    addModel(&scene, &centre);
+    addModel(&scene, &x, SPHERE);
+    addModel(&scene, &y, SPHERE);
+    addModel(&scene, &z, SPHERE);
+    unsigned int centreI = addModel(&scene, &centre, SPHERE);
 
-    addModel(&scene, &sol);
-    addModel(&scene, &soleil);
+    addModel(&scene, &sol, SPHERE);
+    addModel(&scene, &soleil, SPHERE);
+
+    Tore test = {
+        {1, .3, 1},
+        {0, 1, 0},
+        0.05,
+        0.2,
+        imatTore};
+
+    addModel(&scene, &test, TORE);
 
     while(renderer.currentSample < renderer.maxSample)
     {
