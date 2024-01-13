@@ -10,7 +10,8 @@
 typedef enum {
     NONE,
     CAMERA,
-    SPHERE
+    SPHERE,
+    TORE
 } ModelType;
 
 typedef struct DynamicArray {
@@ -22,6 +23,7 @@ typedef struct DynamicArray {
 
 typedef struct Scene {
     DynamicArray spheres;
+    DynamicArray tores;
     DynamicArray materials;
     Color sky;
 } Scene;
@@ -39,8 +41,7 @@ typedef struct HitInfo {
 void initScene(Scene *scene);
 void destroyScene(Scene *scene);
 
-unsigned int addModel(Scene *scene, Sphere *sphere);
-void addLight(Scene *scene, PointLight *pLight);
+unsigned int addModel(Scene *scene, void *element, ModelType type);
 
 void* pointerFrom(Scene *scene, ModelType type, unsigned int ind);
 
