@@ -18,8 +18,8 @@ void destroyRenderer(Renderer *renderer)
 
 void render(Renderer *renderer, Scene *scene, Camera *camera)
 {
-    double biaisx = (double)1 / renderer->l;
-    double biaisy = (double)1 / renderer->L;
+    double biaisx = 2 * (double)1 / renderer->l;
+    double biaisy = 2 * (double)1 / renderer->L;
 
     double halfFOV = tan(camera->fov * 0.5 * M_PI / 180.0);
     double aspect = (double)renderer->L / renderer->l;
@@ -91,18 +91,29 @@ Color computeColor(Renderer *renderer, Scene *scene, Ray *ray)
         }
         rayColor = multiplyColorc(&rayColor, &matHit.albedo);
 
-        //Oriente le rebonds spéculaire
-        Vector random = randomFrom(-0.5, 0.5);
-        //Avec facteur en fonction du roughness
-        Vector devia = mul(&random, matHit.roughness);
-        devia = add(&devia, &hit.hitNormal);
-        normalize(&devia);
+        if(((double) rand() / RAND_MAX) > matHit.roughness)
+        {
+            //Oriente le rebonds spéculaire
+            Vector random = randomFrom(-0.5, 0.5);
+            //Avec facteur en fonction du roughness
+            Vector devia = mul(&random, matHit.roughness);
+            devia = add(&devia, &hit.hitNormal);
+            normalize(&devia);
 
-        ray->o = hit.hitPoint;
-        //On recule le point par rapport à la normal du hit (pour limiter l'acne)
-        Vector bias = mul(&hit.hitNormal, 0.0000000001);
-        ray->o = add(&ray->o, &bias);
-        ray->v = reflect(&ray->v, &devia);
+            ray->o = hit.hitPoint;
+            //On recule le point par rapport à la normal du hit (pour limiter l'acne)
+            Vector bias = mul(&hit.hitNormal, 0.0000000001);
+            ray->o = add(&ray->o, &bias);
+            ray->v = reflect(&ray->v, &devia);
+        }
+        else
+        {
+            ray->o = hit.hitPoint;
+            Vector bias = mul(&hit.hitNormal, 0.0000000001);
+            ray->o = add(&ray->o, &bias);
+            ray->v = randomRayHemisphere(&hit.hitNormal);
+        }
+        
     }
     return light;
 }
