@@ -40,18 +40,15 @@ void initMPIStruct()
     MPI_Type_commit(&MPI_VECTOR_STRUCT);
 
     //SCREEN
-    int screenblocklengths[6] = {1, 1, 1, 1, 1, 1}; // number of elements in each block
-    MPI_Datatype screentypes[6] = {MPI_UNSIGNED, MPI_UNSIGNED, MPI_UNSIGNED, MPI_UNSIGNED, MPI_AINT, MPI_AINT};
-    MPI_Aint screenoffsets[6];
+    int screenblocklengths[3] = {1, 1, 1}; // number of elements in each block
+    MPI_Datatype screentypes[3] = {MPI_UNSIGNED, MPI_UNSIGNED, MPI_AINT};
+    MPI_Aint screenoffsets[3];
 
     screenoffsets[0] = offsetof(Screen, l);
     screenoffsets[1] = offsetof(Screen, L);
-    screenoffsets[2] = offsetof(Screen, nbSample);
-    screenoffsets[3] = offsetof(Screen, maxSample);
-    screenoffsets[4] = offsetof(Screen, screen);
-    screenoffsets[5] = offsetof(Screen, accumulator);
+    screenoffsets[2] = offsetof(Screen, screen);
 
-    MPI_Type_create_struct(6, screenblocklengths, screenoffsets, screentypes, &MPI_SCREEN_STRUCT);
+    MPI_Type_create_struct(3, screenblocklengths, screenoffsets, screentypes, &MPI_SCREEN_STRUCT);
     MPI_Type_commit(&MPI_SCREEN_STRUCT);
     
 
@@ -83,36 +80,33 @@ void initMPIStruct()
     MPI_Type_commit(&MPI_DYNARRAY_STRUCT);
 
     //SCENE
-    int sceneblocklengths[6] = {1, 1, 1, 1, 1, 1};
-    MPI_Datatype scenetypes[6] = {MPI_DYNARRAY_STRUCT, MPI_DYNARRAY_STRUCT, MPI_DYNARRAY_STRUCT, MPI_COLOR_STRUCT, MPI_COLOR_STRUCT, MPI_DOUBLE};
-    MPI_Aint sceneoffsets[6];
+    int sceneblocklengths[4] = {1, 1, 1, 1};
+    MPI_Datatype scenetypes[4] = {MPI_DYNARRAY_STRUCT, MPI_DYNARRAY_STRUCT, MPI_DYNARRAY_STRUCT, MPI_COLOR_STRUCT, MPI_DOUBLE};
+    MPI_Aint sceneoffsets[4];
 
     sceneoffsets[0] = offsetof(Scene, spheres);
-    sceneoffsets[1] = offsetof(Scene, lights);
+    sceneoffsets[1] = offsetof(Scene, tores);
     sceneoffsets[2] = offsetof(Scene, materials);
-    sceneoffsets[3] = offsetof(Scene, ambiant);
-    sceneoffsets[4] = offsetof(Scene, sky);
-    sceneoffsets[5] = offsetof(Scene, maxBounces);
+    sceneoffsets[3] = offsetof(Scene, sky);
 
-    MPI_Type_create_struct(6, sceneblocklengths, sceneoffsets, scenetypes, &MPI_SCENE_STRUCT);
+    MPI_Type_create_struct(4, sceneblocklengths, sceneoffsets, scenetypes, &MPI_SCENE_STRUCT);
     MPI_Type_commit(&MPI_SCENE_STRUCT);
 
     //MATERIAL
-    int materialblocklengths[9] = {1, 1, 1, 1, 1, 1, 1, 1, 1}; // number of elements in each block
-    MPI_Datatype materialtypes[9] = {MPI_INT, MPI_COLOR_STRUCT, MPI_COLOR_STRUCT, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_COLOR_STRUCT};
-    MPI_Aint materialoffsets[9];
+    int nbMembre = 7;
+    int materialblocklengths[7] = {1, 1, 1, 1, 1, 1, 1, 1, 1}; // number of elements in each block
+    MPI_Datatype materialtypes[7] = {MPI_INT, MPI_COLOR_STRUCT, MPI_COLOR_STRUCT, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_COLOR_STRUCT};
+    MPI_Aint materialoffsets[7];
 
     materialoffsets[0] = offsetof(Material, type);
     materialoffsets[1] = offsetof(Material, albedo);
-    materialoffsets[2] = offsetof(Material, specular);
-    materialoffsets[3] = offsetof(Material, roughness);
-    materialoffsets[4] = offsetof(Material, metalness);
-    materialoffsets[5] = offsetof(Material, shininess);
-    materialoffsets[6] = offsetof(Material, refractionFactor);
-    materialoffsets[7] = offsetof(Material, emissionPower);
-    materialoffsets[8] = offsetof(Material, emissionColor);
+    materialoffsets[2] = offsetof(Material, roughness);
+    materialoffsets[3] = offsetof(Material, metalness);
+    materialoffsets[4] = offsetof(Material, refractionFactor);
+    materialoffsets[5] = offsetof(Material, emissionPower);
+    materialoffsets[6] = offsetof(Material, emissionColor);
 
-    MPI_Type_create_struct(9, materialblocklengths, materialoffsets, materialtypes, &MPI_MATERIAL_STRUCT);
+    MPI_Type_create_struct(7, materialblocklengths, materialoffsets, materialtypes, &MPI_MATERIAL_STRUCT);
     MPI_Type_commit(&MPI_MATERIAL_STRUCT);
 
     //SPHERE
