@@ -34,7 +34,64 @@ double intersectSphere(Ray *r, Sphere *sphere)
     }
 }
 
-double intersectTore(Ray *r, Tore *tore, Vector *listePoint)
+double intersectCube(Ray *ray,Cube *cube)
+{ 
+    double tmin, tmax, tymin, tymax, tzmin, tzmax;
+
+    if (ray->v.x >= 0) {
+    tmin = (cube->min.x - ray->o.x) / ray->v.x;
+    tmax = (cube->max.x  - ray->o.x) /  ray->v.x;
+    }
+    else {
+    tmin = (cube->max.x  - ray->o.x) /  ray->v.x;
+    tmax = (cube->min.x - ray->o.x) / ray->v.x;
+    }
+
+    if (ray->v.y  >= 0) {
+    tymin = (cube->min.y - ray->o.y) / ray->v.y;
+    tymax = (cube->max.y - ray->o.y) / ray->v.y;
+    }
+    else {
+    tymin = (cube->max.y - ray->o.y) / ray->v.y;
+    tymax = (cube->min.y - ray->o.y) / ray->v.y;
+    }
+
+    if (ray->v.z >= 0) {
+    tzmin = (cube->min.z - ray->o.z) / ray->v.z;
+    tzmax = (cube->max.z  - ray->o.z) /  ray->v.z;
+    }
+    else {
+    tzmin = (cube->max.z  - ray->o.z) /  ray->v.z;
+    tzmax = (cube->min.z - ray->o.z) / ray->v.z;
+    }
+
+    if ( (tmin > tymax) || (tymin > tmax) )
+    return -1;
+
+    if (tymin > tmin)
+    tmin = tymin;
+
+    if (tymax < tmax)
+    tmax = tymax;
+
+    if ( (tmin > tzmax) || (tzmin > tmax) )
+    return -1;
+
+    if (tzmin > tmin)
+    tmin = tzmin;
+    if (tzmax < tmax)
+    tmax = tzmax;
+
+    if(tmin > 0.0)
+        return tmin;
+
+    if(tmax > 0.0)
+        return tmax;
+
+    return -1;
+}
+
+double intersectTore(Ray *r, Tore *tore,  Vector *listePoint)
 {
     // Notre base
     Vector i = {1, 0, 0}, j = {0, 1, 0}, k = {0, 0, 1};

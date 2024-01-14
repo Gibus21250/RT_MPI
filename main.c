@@ -14,8 +14,9 @@
 #include "models/material.h"
 #include "models/sphere.h"
 #include "models/tore.h"
-#include "models/plane.h"
+#include "models/cube.h"
 #include "models/rectangle.h"
+#include "models/plane.h"
 
 #include "animator/animator.h"
 
@@ -51,7 +52,7 @@ int main(int argc, char const **argv)
         .L = ecran.L,
         .maxSample = INT32_MAX,
         .currentSample = 0,
-        .maxBounces = 64};
+        .maxBounces = 4};
 
     Animator animator;
 
@@ -145,6 +146,9 @@ int main(int argc, char const **argv)
     Sphere x = {{1, 0.2, 0}, 0.2, imatx};
     Sphere y = {{0, 1.2, 0}, 0.2, imaty};
     Sphere z = {{0, 0.2, 1}, 0.2, imatz};
+
+    Cube c = {{1, 0, 1},{2, 1, 2},imatblanc};
+
     Sphere centre = {{0, 0.2, 0}, 0.2, imatblanc};
 
     Sphere sol = {{0, -10, 0}, 10, imatmagenta};
@@ -156,8 +160,9 @@ int main(int argc, char const **argv)
     addModel(&scene, &z, SPHERE);
     unsigned int centreI = addModel(&scene, &centre, SPHERE);
 
-    //addModel(&scene, &sol, SPHERE);
+    addModel(&scene, &sol, SPHERE);
     addModel(&scene, &soleil, SPHERE);
+    addModel(&scene, &centre, SPHERE);
 
     Tore test = {
         {1, .3, 1},

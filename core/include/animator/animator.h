@@ -3,6 +3,7 @@
 
 #include "scene/scene.h"
 #include "utils/vector.h"
+#include <stdlib.h>
 
 /**
  * Associe un élément animable de la scène (Cf scene.h)

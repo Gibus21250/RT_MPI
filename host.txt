@@ -1,1 +1,1 @@
-Gibus21250 slots=24
+PC-Hugo slots=20

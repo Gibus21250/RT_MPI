@@ -1,7 +1,6 @@
 #ifndef SCENE_H
 #define SCENE_H
 
-#include "models/sphere.h"
 #include "models/ray.h"
 #include "models/material.h"
 
@@ -13,6 +12,7 @@ typedef enum {
     PLANE,
     RECTANGLE,
     SPHERE,
+    CUBE,
     TORE
 } ModelType;
 
@@ -25,6 +25,7 @@ typedef struct DynamicArray {
 
 typedef struct Scene {
     DynamicArray spheres;
+    DynamicArray cubes;
     DynamicArray tores;
     DynamicArray planes;
     DynamicArray rectangles;

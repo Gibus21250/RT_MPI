@@ -15,7 +15,7 @@ BIN_DIR = bin
 MPIC = mpicc
 CC = gcc
 #-Wpadded -mavx2
-CFLAGS = -Wall -O3 -Wextra -g -I$(CORE_INCLUDE) -I$(MPI_UTILS_INCLUDE) -I$(MPI_INCLUDE)
+CFLAGS = -O3 -Wextra -g -I$(CORE_INCLUDE) -I$(MPI_UTILS_INCLUDE) -I$(MPI_INCLUDE)
 
 #Prendre tous les fichier sources de core
 CORE_SOURCES := $(wildcard $(CORE_SRC)/**/*.c $(CORE_SRC)/*.c)

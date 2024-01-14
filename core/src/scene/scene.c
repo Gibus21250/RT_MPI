@@ -3,6 +3,8 @@
 #include "utils/vector.h"
 #include "utils/math.h"
 #include "models/material.h"
+#include "models/cube.h"
+#include "models/tore.h"
 
 #include "renderer/intersector.h"
 
@@ -22,6 +24,10 @@ void initScene(Scene *scene)
     scene->spheres.nb = 0;
     scene->spheres.max = STEP;
 
+    scene->cubes.tab = malloc(STEP * sizeof(Cube));
+    scene->cubes.nb = 0;
+    scene->cubes.max = STEP;
+
     scene->tores.tab = malloc(STEP * sizeof(Tore));
     scene->tores.nb = 0;
     scene->tores.max = STEP;
@@ -30,9 +36,9 @@ void initScene(Scene *scene)
     scene->planes.nb = 0;
     scene->planes.max = STEP;
 
-    scene->planes.tab = malloc(STEP * sizeof(Rectangle));
-    scene->planes.nb = 0;
-    scene->planes.max = STEP;
+    scene->rectangles.tab = malloc(STEP * sizeof(Rectangle));
+    scene->rectangles.nb = 0;
+    scene->rectangles.max = STEP;
 
     // On init le tableau des materiaux
     scene->materials.tab = malloc(STEP * sizeof(Material));
@@ -43,6 +49,7 @@ void initScene(Scene *scene)
 void destroyScene(Scene *scene)
 {
     free(scene->spheres.tab);
+    free(scene->cubes.tab);
     free(scene->tores.tab);
     free(scene->planes.tab);
     free(scene->rectangles.tab);
@@ -142,6 +149,113 @@ HitInfo launchRay(Scene *scene, Ray *ray)
                 closestHit.hitNormal = sub(&hitPoint, &sphere->center);
                 normalize(&closestHit.hitNormal);
 
+            }
+        }
+    }
+
+    array = &scene->cubes;
+    //Pour chaque Cube
+    for (unsigned int i = 0; i < array->nb; ++i)
+    {
+        Cube *cube = &((Cube *)array->tab)[i];
+
+        double tTmp = intersectCube(ray, cube);
+
+        // printf("%lf\n", tTmp);
+        if (tTmp > 0)
+        {
+
+            // On récupère le point à l'intersection
+            Vector hitPoint = move(ray, tTmp).o;
+
+            Vector normal = {1,1,1};/*
+            Vector dir = add(&hitPoint,&cube->center);
+
+            Vector mod = {dir.x,dir.y,dir.z};
+
+            if(mod.x < 0.0){mod.x = -1.0*mod.x;}
+            if(mod.y < 0.0){mod.y = -1.0*mod.y;}
+            if(mod.z < 0.0){mod.z = -1.0*mod.z;}
+
+
+
+
+            if (mod.x > mod.y && mod.x > mod.z)
+            {
+                printf("x :%lf \n",dir.x);
+                if (dir.x > 0.0)
+                {
+                    Vector plan = {1, 0, 0};
+                    normal = add(&normal,&plan);
+                    normal = add(&hitPoint,&normal);
+                }
+
+                else
+                {
+                    Vector plan = {-1, 0, 0};
+                    normal = add(&normal,&plan);
+                    normal = add(&hitPoint,&normal);
+                }
+            }
+
+            else if (mod.y > mod.x && mod.y > mod.z)
+            {
+                printf("y :%lf \n",dir.y);
+                if (dir.y > 0.0)
+                {
+                    Vector plan = {0,1, 0};
+                    normal = add(&normal,&plan);
+                    normal = add(&hitPoint,&normal);
+                }
+
+                else
+                {
+    
+                    Vector plan = {0, -1, 0};
+                    Vector normal = add(&normal,&plan);
+                    normal = add(&hitPoint,&normal);
+                }
+
+            }
+
+            else if (mod.z > mod.x && mod.z > mod.y)
+            {
+                printf("z :%lf \n",dir.z);
+                if (dir.z > 0.0)
+                {
+
+                    Vector plan = {0, 0, 1};
+                    normal = add(&normal,&plan);
+                    normal = add(&hitPoint,&normal);
+                }
+
+                else
+                {
+                    Vector plan = {0, 0,  -1};
+                    normal = add(&normal,&plan);
+                    normal = add(&hitPoint,&normal);
+                }
+
+            }*/
+
+            // Vecteur origine -> hitPoint
+            normalize(&normal);
+            //printf("%lf %lf %lf \n",normal.x,normal.y,normal.z);
+            // dist carré
+            Vector cHit = sub(&hitPoint,&ray->o);
+            double dist = dot(&cHit, &cHit);
+            // printf("Colision!\n", tTmp);
+            // Colision
+
+            // Colision
+            if (dist < closestHit.distance2)
+            {
+                closestHit.type = CUBE;
+                closestHit.modelIndice = i;
+                closestHit.materialIndice = cube->materialIndice;
+                closestHit.distance2 = dist;
+                closestHit.hitPoint = hitPoint;
+                closestHit.hitNormal = normal; // Utiliser la normale calculée plutôt que de la normaliser à nouveau
             }
         }
     }
@@ -292,6 +406,18 @@ unsigned int addModel(Scene *scene, void *element, ModelType type)
         }
         ((Sphere *)array->tab)[array->nb] = *((Sphere*) element);
         break;
+
+    case CUBE:
+        array = &scene->cubes;
+        // Si la taille du tableau ne suffis plus, on l'agrandi de STEP
+        if (array->nb == array->max)
+        {
+            array->max += STEP;
+            array->tab = realloc(array->tab, array->max * sizeof(Cube));
+        }
+        ((Cube *)array->tab)[array->nb] = *((Cube*) element);
+        break;
+
     case TORE:
         array = &scene->tores;
         // Si la taille du tableau ne suffis plus, on l'agrandi de STEP
@@ -322,6 +448,10 @@ unsigned int addModel(Scene *scene, void *element, ModelType type)
         }
         ((Rectangle *)array->tab)[array->nb] = *((Rectangle*) element);
         break;
+
+    case NONE:
+        break;
+
     }
 
     array->nb++;
