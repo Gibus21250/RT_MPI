@@ -10,6 +10,8 @@
 typedef enum {
     NONE,
     CAMERA,
+    PLANE,
+    RECTANGLE,
     SPHERE,
     TORE
 } ModelType;
@@ -24,6 +26,8 @@ typedef struct DynamicArray {
 typedef struct Scene {
     DynamicArray spheres;
     DynamicArray tores;
+    DynamicArray planes;
+    DynamicArray rectangles;
     DynamicArray materials;
     Color sky;
 } Scene;
