@@ -2,16 +2,18 @@
 
 Vector calculateToreNormal(Vector *point, Tore *tore)
 {
-    double r2 = sqrt(tore->r);
-    double R2 = sqrt(tore->R);
+    Vector directionHit = sub(point, &tore->center);
 
-    Vector normal = {
-        4.0 * point->x * (sqrt(point->x) + sqrt(point->y) + sqrt(point->z) - r2 - R2),
-        4.0 * point->y * (sqrt(point->x) + sqrt(point->y) + sqrt(point->z) - r2 - R2),
-        4.0 * point->z * (sqrt(point->x) + sqrt(point->y) + sqrt(point->z) - r2 - R2) + 8 * R2 * point->z,
-        };
+    double scal = dot(&tore->normal, &directionHit);
+    Vector tmp = mul(&tore->normal, scal);
+    //Vproj
+    Vector proj = sub(point, &tmp);
 
-    normalize(&normal);
+    normalize(&proj);
 
-    return normal;
+    Vector centerExte = mul(&proj, tore->R);
+
+    Vector normale = sub(point, &centerExte);
+
+    return normale;
 }
