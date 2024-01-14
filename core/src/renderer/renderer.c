@@ -8,7 +8,7 @@
 
 void initRenderer(Renderer *renderer)
 {
-    renderer->accumulator = (Color *) calloc(renderer->l * renderer->L, sizeof(Color));
+    renderer->accumulator = (Color *)calloc(renderer->l * renderer->L, sizeof(Color));
 }
 
 void destroyRenderer(Renderer *renderer)
@@ -37,10 +37,10 @@ void render(Renderer *renderer, Scene *scene, Camera *camera)
         {
             // On commence en haut à gauche, et on lance un rayon au hasard dans le pixel (Monte Carlo)
             double xEcran = 2 * ((double)j / renderer->l) - 1;
-            xEcran += biaisx * ((double) rand()) / RAND_MAX;
+            xEcran += biaisx * ((double)rand()) / RAND_MAX;
 
             double yEcran = 1 - 2 * ((double)i / renderer->L);
-            yEcran -= biaisy * ((double) rand()) / RAND_MAX;
+            yEcran -= biaisy * ((double)rand()) / RAND_MAX;
 
             Vector rm = mul(&right, xEcran * halfFOV * aspect);
             Vector um = mul(&up, yEcran * halfFOV);
@@ -74,7 +74,7 @@ Color computeColor(Renderer *renderer, Scene *scene, Ray *ray)
         if (hit.type == NONE)
         {
             // si le rayon ne touche rien, on récupère la couleur du ciel
-            //Color sky = {.5, .5, .5};
+            // Color sky = {.5, .5, .5};
             Color sky = computeSkyColor(scene, ray);
             sky = multiplyColorc(&sky, &rayColor);
             light = addColor(&light, &sky);
@@ -84,24 +84,26 @@ Color computeColor(Renderer *renderer, Scene *scene, Ray *ray)
         Material matHit = ((Material *)scene->materials.tab)[hit.materialIndice];
 
         // En fonction du type de materiaux
-        if(matHit.type & EMISSIVE)
+        if (matHit.type & EMISSIVE)
         {
             Color emission = multiplyColord(&matHit.emissionColor, matHit.emissionPower);
-            light = addColor(&light, &emission);    
+            light = addColor(&light, &emission);
         }
+
+        // Absorbtion par la couleur deu material
         rayColor = multiplyColorc(&rayColor, &matHit.albedo);
 
-        if(((double) rand() / RAND_MAX) > matHit.roughness)
+        if (((double)rand() / RAND_MAX) > matHit.roughness)
         {
-            //Oriente le rebonds spéculaire
+            // Oriente le rebonds spéculaire
             Vector random = randomFrom(-0.5, 0.5);
-            //Avec facteur en fonction du roughness
+            // Avec facteur en fonction du roughness
             Vector devia = mul(&random, matHit.roughness);
             devia = add(&devia, &hit.hitNormal);
             normalize(&devia);
 
             ray->o = hit.hitPoint;
-            //On recule le point par rapport à la normal du hit (pour limiter l'acne)
+            // On recule le point par rapport à la normal du hit (pour limiter l'acne)
             Vector bias = mul(&hit.hitNormal, 0.0000000001);
             ray->o = add(&ray->o, &bias);
             ray->v = reflect(&ray->v, &devia);
@@ -111,9 +113,9 @@ Color computeColor(Renderer *renderer, Scene *scene, Ray *ray)
             ray->o = hit.hitPoint;
             Vector bias = mul(&hit.hitNormal, 0.0000000001);
             ray->o = add(&ray->o, &bias);
+
             ray->v = randomRayHemisphere(&hit.hitNormal);
         }
-        
     }
     return light;
 }
@@ -126,13 +128,13 @@ Color computeSkyColor(Scene *scene, Ray *ray)
     double t = 0.5 * (normalizedDirection.y + 1.0);
     Color horizon = {1, 0.8823529, 0.7701960};
     //{1, 1, 0.8}
-    //mieux 1, 0.8823529, 0.7701960
+    // mieux 1, 0.8823529, 0.7701960
 
     Color tmpDeb = multiplyColord(&horizon, (1 - t));
     Color tmpFin = multiplyColord(&scene->sky, t);
 
     Color skyColor = addColor(&tmpDeb, &tmpFin);
-    //Color skyColor = {0.3, 0.3, 0.5}; //Debug
+    // Color skyColor = {0.3, 0.3, 0.5}; //Debug
 
     return skyColor;
 }
