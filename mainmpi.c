@@ -12,6 +12,7 @@
 #include "models/material.h"
 #include "models/sphere.h"
 #include "models/tore.h"
+#include "models/plane.h"
 
 #include "animator/animator.h"
 
@@ -25,14 +26,17 @@
 
 int main(int argc, char const *argv[])
 {
-    if(argc == 1)
+    if(argc < 6)
     {   
-        printf("Veuillez renseigner nombre de sample max par images!\n");
+        printf("Veuillez renseigner:\nLongueur, largeur, Nombre de FPS, le nombre de seconde d'animation, ainsi que le nombre de sample par images!\n");
         return 0;
     }
 
-    //Process info
-    int nbProcess, my_rank, nbTotalSample;;
+// ! ||--------------------------------------------------------------------------------||
+// ! ||                                    MPI INIT                                    ||
+// ! ||--------------------------------------------------------------------------------||
+
+    int nbProcess, my_rank;
 
     MPI_Status status;
 
@@ -43,25 +47,49 @@ int main(int argc, char const *argv[])
 
     srand(my_rank);
 
-    nbTotalSample = atoi(argv[1]);
+    int longueur = atoi(argv[1]);
+    int larg = atoi(argv[2]);
+    int nbFPS = atoi(argv[3]);
+    int timeAnimation = atoi(argv[4]);
+    int nbTotalSample = atoi(argv[5]);
+
     unsigned nbSamplePerProcess =  nbTotalSample / nbProcess;
+    double dt = 1./nbFPS;
+    int nbImagesTotal = nbFPS * timeAnimation;
+
+    time_t t;
+    struct tm *tm_info;
+
+    time(&t);
+    tm_info = localtime(&t);
+
+    char date_str[20];
+    strftime(date_str, sizeof(date_str), "rendu%m-%d-%H%M", tm_info);
+
+    //Nom du dossier où seront les images rendu de l'animations
+    char folder[20];
+    sprintf(folder, "%s", date_str);
 
     if(my_rank == 0)
     {
-        printf("Rendu de %d samples: %u samples pour %d process\n", nbTotalSample, nbSamplePerProcess, nbProcess);
+        printf("Rendu de %d images à %d samples (%d samples/processus (total: %d processus))\n@%u fps pour %ds d'animation\n", nbImagesTotal, nbTotalSample, nbSamplePerProcess, nbProcess, nbFPS, timeAnimation);
     }
+
+// ! ||--------------------------------------------------------------------------------||
+// ! ||                      INITIALISATION DES STRUCTURES DU CORE                     ||
+// ! ||--------------------------------------------------------------------------------||
     
     Renderer renderer = {
-        .l = 720,
-        .L = 480,
+        .l = longueur,
+        .L = larg,
         .maxSample = nbSamplePerProcess,
         .currentSample = 0,
         .maxBounces = 64
     };
 
     Renderer rendererGlobal = {
-        .l = renderer.l,
-        .L = renderer.L,
+        .l = longueur,
+        .L = larg,
         .maxSample = nbTotalSample,
         .currentSample = nbTotalSample,
         .maxBounces = 64
@@ -71,8 +99,8 @@ int main(int argc, char const *argv[])
         .sky = {0, 0.4, 0.7}}; // bleu clair {0, 0.5, 0.8}
 
     Camera camera = {
-        .position = {2, 2, 2},
-        .lookAt = {0, 0, 0},
+        .position = {2, 1, 2},
+        .lookAt = {-1, .5, -1},
         .up = {0, 1, 0},
         .distance = 1,
         .fov = 90};
@@ -82,31 +110,37 @@ int main(int argc, char const *argv[])
     initMPIStruct();
     initReduceOp();
 
-    //Chaque process initializera son ecran, et sa scènes, son renderer
+    //Chaque process initializera sa scènes, son renderer, et son animator
     initScene(&scene);
     initRenderer(&renderer);
     initAnimator(&animator);
 
+    //Le root initialise un renderer global, utilisé pendant le reduce
     if(my_rank == 0)
     {
         initRenderer(&rendererGlobal);
     }
 
-    // On commence par initialiser les materiaux:
+// ! ||--------------------------------------------------------------------------------||
+// ! ||                          INITIALISATION DES MATERIAUX                          ||
+// ! ||--------------------------------------------------------------------------------||
     Material matx = {
         .type = DIFFUSE,
         .albedo = {1, 0, 0},
-        .roughness = 1};
+        .roughness = 1,
+        .metalness = 0};
 
     Material maty = {
         .type = DIFFUSE,
         .albedo = {0, 1, 0},
-        .roughness = 0.1};
+        .roughness = 0.1,
+        .metalness = 0};
 
     Material matz = {
         .type = DIFFUSE,
         .albedo = {0, 0, 1},
-        .roughness = 0};
+        .roughness = 0,
+        .metalness = 0};
 
     Material blanc = {
         .type = DIFFUSE | EMISSIVE,
@@ -120,6 +154,11 @@ int main(int argc, char const *argv[])
         .albedo = {1, 0, 1},
         .roughness = 1};
 
+    Material matvertforet = {
+        .type = DIFFUSE,
+        .albedo = {34/255., 139/255., 34/255.},
+        .roughness = .8};
+
     Material matsoleil = {
         .type = DIFFUSE | EMISSIVE,
         .albedo = {0.8, 0.5, 0.2},
@@ -128,10 +167,26 @@ int main(int argc, char const *argv[])
         .emissionPower = 1};
 
     Material matTore = {
-        .type = DIFFUSE | EMISSIVE,
+        .type = DIFFUSE,
         .albedo = {0.5, .8, .9},
-        .roughness = .2
+        .roughness = 0
     };
+
+    Material matblack = {
+        .type = DIFFUSE,
+        .albedo = {0, 0, 0},
+        .roughness = 1
+    };
+
+    Material matmirror = {
+        .type = DIFFUSE,
+        .albedo = {1, 1, 1},
+        .roughness = 0
+    };
+
+// ! ||--------------------------------------------------------------------------------||
+// ! ||                     AJOUT DES MATERIAUX DANS LA SCENE                          ||
+// ! ||--------------------------------------------------------------------------------||
 
     // On ajoute les matériaux à la scène
     unsigned int imatx = addMaterial(&scene, &matx);
@@ -141,7 +196,13 @@ int main(int argc, char const *argv[])
     unsigned int imatmagenta = addMaterial(&scene, &magenta);
     unsigned int imatsoleil = addMaterial(&scene, &matsoleil);
     unsigned int imatTore = addMaterial(&scene, &matTore);
+    unsigned int imatvertforet = addMaterial(&scene, &matvertforet);
+    unsigned int imatblack = addMaterial(&scene, &matblack);
+    unsigned int imatmirror = addMaterial(&scene, &matmirror);
 
+// ! ||--------------------------------------------------------------------------------||
+// ! ||                        INITIALISATION DES MODELES                             ||
+// ! ||--------------------------------------------------------------------------------||
     // On initialise les éléments de la scène
     Sphere x = {{1, 0.2, 0}, 0.2, imatx};
     Sphere y = {{0, 1.2, 0}, 0.2, imaty};
@@ -151,70 +212,95 @@ int main(int argc, char const *argv[])
     Sphere sol = {{0, -10, 0}, 10, imatmagenta};
     Sphere soleil = {{-20, 5, -20}, 20, imatsoleil};
 
-    // On ajoute les éléments dans la scène
+    Plane testplane = {{0, 0, 0}, {0, 1, 0},imatvertforet};
+
+// ! ||--------------------------------------------------------------------------------||
+// ! ||                         AJOUT DES MODELES DANS LA SCENE                        ||
+// ! ||--------------------------------------------------------------------------------||
+
     addModel(&scene, &x, SPHERE);
     addModel(&scene, &y, SPHERE);
     addModel(&scene, &z, SPHERE);
-    unsigned int centreI = addModel(&scene, &centre, SPHERE);
-
-    addModel(&scene, &sol, SPHERE);
+    unsigned int centerId = addModel(&scene, &centre, SPHERE);
     addModel(&scene, &soleil, SPHERE);
 
-    Tore test = {
-        {1, .3, 1},
-        {0, 1, 0},
-        0.05,
-        0.2,
-        imatTore};
+    addModel(&scene, &testplane, PLANE);
 
-    addModel(&scene, &test, TORE);
+// ! ||--------------------------------------------------------------------------------||
+// ! ||                    AJOUT DES MODELES A ANIMER A L'ANIMATEUR                    ||
+// ! ||--------------------------------------------------------------------------------||
 
-    while(renderer.currentSample < renderer.maxSample)
-    {
-        //Cette fonction additionne une couleur de ecran.accumulator pour chaque appels
-        render(&renderer, &scene, &camera);
-    }
+    Vector directionc = {1, 0, 1};
+    normalize(&directionc);
+    //On récupère le pointeur en mémoire depuis la scène
+    void *centerPointer = pointerFrom(&scene, SPHERE, centerId);
 
-    //On reduce, dans l'accumulator que le root a créé
-    MPI_Reduce(renderer.accumulator, rendererGlobal.accumulator, renderer.L * renderer.l, MPI_COLOR_STRUCT, ACCUMULATOR_REDUCE_OP, 0, MPI_COMM_WORLD);
+    addMovableElement(&animator, SPHERE, centerPointer, &directionc);
     
-    //On rassemble le résultat de tous les process, et on sauvegarde
-    if(my_rank == 0)
+
+// ! ||--------------------------------------------------------------------------------||
+// ! ||                      BOUCLE PRINCIPALE DU RENDU DES IMAGES                     ||
+// ! ||--------------------------------------------------------------------------------||
+    int nbFrame = 0;
+    while (nbFrame < nbImagesTotal)
     {
-        time_t t;
-        struct tm *tm_info;
+        //Chaque node clear leurs accumulator
+        clearAccumulator(&renderer);
 
-        time(&t);
-        tm_info = localtime(&t);
+        if(my_rank == 0)
+        {
+            clearAccumulator(&rendererGlobal);
+            //Le render global sera utilisé que pour collecter toutes les accumulators
+            rendererGlobal.currentSample = rendererGlobal.maxSample;
+        }
+            
 
-        char date_str[50];
-        strftime(date_str, sizeof(date_str), "%m-%d-%H%M%S", tm_info);
+        //Boucle de rendu
+        while(renderer.currentSample < renderer.maxSample)
+        {
+            //Cette fonction calcul 1 sample
+            render(&renderer, &scene, &camera);
+        }
 
-        char result_str[60];
-        sprintf(result_str, "%s-%d.ppm", date_str, rendererGlobal.maxSample);
+        //On reduce, dans l'accumulator du renderer global que le root a créé
+        MPI_Reduce(renderer.accumulator, rendererGlobal.accumulator, renderer.L * renderer.l, MPI_COLOR_STRUCT, ACCUMULATOR_REDUCE_OP, 0, MPI_COMM_WORLD);
+        
+        //on sauvegarde l'image
+        if(my_rank == 0)
+        {
+            char filename[20];
+            sprintf(filename, "%d.ppm", nbFrame);
+            //Le root initialise un écran
+            Screen ecran = {
+                .l = renderer.l,
+                .L = renderer.L
+            };
 
-        //Le root initialise un écran
-        Screen ecran = {
-            .l = renderer.l,
-            .L = renderer.L
-        };
+            initScreen(&ecran);
 
-        initScreen(&ecran);
+            //Il remplie son écran avec le résultat de l'accumulation de sample
+            updateResult(&rendererGlobal, &ecran);
 
-        //Il remplie son écran avec le résultat de l'accumulation de sample
-        updateResult(&rendererGlobal, &ecran);
+            //On sauvegarde
+            savePPMP6(ecran.screen, ecran.l, ecran.L, folder, filename);
 
-        //On sauvegarde
-        savePPMP6(ecran.screen, ecran.l, ecran.L, result_str);
+            //Root détruit son écran
+            destroyScreen(&ecran);
 
-        //Root détruit son écran
-        destroyScreen(&ecran);
-        destroyRenderer(&rendererGlobal);
-
+        }
+        nbFrame++;
+        //Update des positions des objets dans la scène
+        updatePosition(&animator, dt);
     }
     
     destroyScene(&scene);
     destroyRenderer(&renderer);
+
+    //Le root delete le renderer global
+    if(my_rank == 0)
+    {
+        destroyRenderer(&rendererGlobal);
+    }
 
     deleteReduceOp();
     freeMPIStruct();
