@@ -13,40 +13,26 @@
 
 Vector randomRayHemisphere(Vector *normale)
 {
-    // Génération de coordonnées sphériques aléatoires
-    double theta = 2.0 * M_PI * ((double) rand() / RAND_MAX); // Angle azimutal
-    double phi = acos(1.0 - 2.0 * ((double) rand() / RAND_MAX)); // Angle polaire
-
-    // Conversion des coordonnées sphériques en coordonnées cartésiennes
-    double x = sin(phi) * cos(theta);
-    double y = sin(phi) * sin(theta);
-    double z = cos(phi);
-
-    // Générer une base orthogonale à partir de la normale
-	Vector tangent = cross(&(Vector){0, 1, 0}, normale);
-    normalize(&tangent);
-    Vector bitangent = cross(normale, &tangent);
-	normalize(&bitangent);
-
-    // Calculer la direction du rayon dans la base locale
-	Vector tx = mul(&tangent, x);
-	Vector ty = mul(&bitangent, y);
-	Vector nz = mul(normale, z);
+	Vector res;
+	double d;
+	do
+	{
+		res = randomFrom(-1, 1);
+		d = dot(&res, &res);
+	} while (d > 1);
 	
-    Vector randomDirection = add(&tx, &ty);
-	randomDirection = add(&randomDirection, &nz);
+	res = mul(&res, 1/d);
+	
 
-    normalize(&randomDirection);
-
-    return randomDirection;
+    return res;
 }
 
 Vector randomUnit()
 {
 	Vector res = {
-		((double) rand() / RAND_MAX),
-		((double) rand() / RAND_MAX),
-		((double) rand() / RAND_MAX)
+		((double) rand() / RAND_MAX + 1.0),
+		((double) rand() / RAND_MAX + 1.0),
+		((double) rand() / RAND_MAX + 1.0)
 	};
 
 	return res;
