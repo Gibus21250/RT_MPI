@@ -41,7 +41,6 @@ void updatePosition(Animator *anim, double dt)
 {
     for (unsigned int i = 0; i < anim->nb; i++)
     {
-        printf("type %d\n", anim->elements[i].type);
         switch (anim->elements[i].type)
         {
         case CAMERA:
@@ -50,7 +49,6 @@ void updatePosition(Animator *anim, double dt)
             cam->position = add(&cam->position, &pc);
             break;
         case SPHERE:
-            //printf("Pointer animator: %p\n", anim->elements[i].p);
             Sphere *el = (Sphere*) (anim->elements[i].p);
             Vector ps = mul(&anim->elements[i].vitesse, dt);
             el->center = add(&el->center, &ps);
