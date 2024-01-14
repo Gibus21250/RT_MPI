@@ -1,12 +1,24 @@
 #include "exporter/saver.h"
+
 #include <stdio.h>
+#include <sys/stat.h>
+#include <string.h>
 
 
-char savePPMP6(Color *image, unsigned int l, unsigned int L, char *name)
+char savePPMP6(Color *image, unsigned int l, unsigned int L, char *folder, char *name)
 {
+    
+    mkdir(folder, 0755); //Cree le dossier, s'il n'a pas déjà été créé
+
     FILE *pfile;
 
-    pfile = fopen(name, "wb");
+    char chemin[30] = {};
+    strcpy(chemin, folder);
+    strcat(chemin, "/");
+    strcat(chemin, name);
+
+
+    pfile = fopen(chemin, "wb");
 
     if (pfile)
     {
@@ -38,11 +50,19 @@ char savePPMP6(Color *image, unsigned int l, unsigned int L, char *name)
         return 0;
 }
 
-char savePPMP3(Color *image, unsigned int l, unsigned int L, char *name)
+char savePPMP3(Color *image, unsigned int l, unsigned int L, char *folder, char *name)
 {
+    mkdir(folder, 0755); //Cree le dossier, s'il n'a pas déjà été créé
+
     FILE *pfile;
 
-    pfile = fopen(name, "wb");
+    char chemin[30] = {};
+    strcpy(chemin, folder);
+    strcat(chemin, "/");
+    strcat(chemin, name);
+
+
+    pfile = fopen(chemin, "wb");
 
     if (pfile)
     {
