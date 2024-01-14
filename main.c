@@ -14,6 +14,8 @@
 #include "models/material.h"
 #include "models/sphere.h"
 #include "models/tore.h"
+#include "models/plane.h"
+#include "models/rectangle.h"
 
 #include "animator/animator.h"
 
@@ -38,8 +40,8 @@ int main(int argc, char const **argv)
         .sky = {0, 0.4, 0.7}}; // bleu clair {0, 0.5, 0.8}
 
     Camera camera = {
-        .position = {2, 2, 2},
-        .lookAt = {0, 0, 0},
+        .position = {2, 1, 2},
+        .lookAt = {-1, .5, -1},
         .up = {0, 1, 0},
         .distance = 1,
         .fov = 90};
@@ -49,7 +51,7 @@ int main(int argc, char const **argv)
         .L = ecran.L,
         .maxSample = INT32_MAX,
         .currentSample = 0,
-        .maxBounces = 4};
+        .maxBounces = 64};
 
     Animator animator;
 
@@ -69,17 +71,20 @@ int main(int argc, char const **argv)
     Material matx = {
         .type = DIFFUSE,
         .albedo = {1, 0, 0},
-        .roughness = 1};
+        .roughness = 1,
+        .metalness = 0};
 
     Material maty = {
         .type = DIFFUSE,
         .albedo = {0, 1, 0},
-        .roughness = 0.1};
+        .roughness = 0.1,
+        .metalness = 0};
 
     Material matz = {
         .type = DIFFUSE,
         .albedo = {0, 0, 1},
-        .roughness = 0};
+        .roughness = 0,
+        .metalness = 0};
 
     Material blanc = {
         .type = DIFFUSE | EMISSIVE,
@@ -93,6 +98,11 @@ int main(int argc, char const **argv)
         .albedo = {1, 0, 1},
         .roughness = 1};
 
+    Material matvertforet = {
+        .type = DIFFUSE,
+        .albedo = {34/255., 139/255., 34/255.},
+        .roughness = .8};
+
     Material matsoleil = {
         .type = DIFFUSE | EMISSIVE,
         .albedo = {0.8, 0.5, 0.2},
@@ -101,9 +111,21 @@ int main(int argc, char const **argv)
         .emissionPower = 1};
 
     Material matTore = {
-        .type = DIFFUSE | EMISSIVE,
+        .type = DIFFUSE,
         .albedo = {0.5, .8, .9},
-        .roughness = .2
+        .roughness = 0
+    };
+
+    Material matblack = {
+        .type = DIFFUSE,
+        .albedo = {0, 0, 0},
+        .roughness = 1
+    };
+
+    Material matmirror = {
+        .type = DIFFUSE,
+        .albedo = {1, 1, 1},
+        .roughness = 0
     };
 
     // On ajoute les matériaux à la scène
@@ -114,6 +136,10 @@ int main(int argc, char const **argv)
     unsigned int imatmagenta = addMaterial(&scene, &magenta);
     unsigned int imatsoleil = addMaterial(&scene, &matsoleil);
     unsigned int imatTore = addMaterial(&scene, &matTore);
+    unsigned int imatvertforet = addMaterial(&scene, &matvertforet);
+    unsigned int imatblack = addMaterial(&scene, &matblack);
+    unsigned int imatmirror = addMaterial(&scene, &matmirror);
+
 
     // On initialise les éléments de la scène
     Sphere x = {{1, 0.2, 0}, 0.2, imatx};
@@ -125,12 +151,12 @@ int main(int argc, char const **argv)
     Sphere soleil = {{-20, 5, -20}, 20, imatsoleil};
 
     // On ajoute les éléments dans la scène
-    //addModel(&scene, &x, SPHERE);
-    //addModel(&scene, &y, SPHERE);
-    //addModel(&scene, &z, SPHERE);
-    //unsigned int centreI = addModel(&scene, &centre, SPHERE);
+    addModel(&scene, &x, SPHERE);
+    addModel(&scene, &y, SPHERE);
+    addModel(&scene, &z, SPHERE);
+    unsigned int centreI = addModel(&scene, &centre, SPHERE);
 
-    addModel(&scene, &sol, SPHERE);
+    //addModel(&scene, &sol, SPHERE);
     addModel(&scene, &soleil, SPHERE);
 
     Tore test = {
@@ -138,14 +164,37 @@ int main(int argc, char const **argv)
         {0, 1, 0},
         0.05,
         0.2,
-        imatTore};
+        imatblanc};
 
-    addModel(&scene, &test, TORE);
+    //addModel(&scene, &test, TORE);
 
     // Ajouter les models à animer, à l'Animator
     // void *pCentre = pointerFrom(&scene, SPHERE, centreI);
     Vector vitesseCentre = {0, 1, 0};
 
+    Plane testplane = {
+        {0, 0, 0},
+        {0, 1, 0},
+        imatmagenta
+    };
+
+    addModel(&scene, &testplane, PLANE);
+
+
+    Vector circlePos = {1, 1, 1};
+    Vector circleLook = {0, 0, 0};
+    circleLook = sub(&circleLook, &circlePos);
+    normalize(&circleLook);
+
+    Rectangle testRec = {
+        circlePos,
+        circleLook,
+        .2, 1,
+        imatsoleil
+    };
+
+    //addModel(&scene, &testRec, RECTANGLE);
+    
     // addMovableElement(&animator, SPHERE, pCentre, &vitesseCentre);
 
     SDL_Event event;
@@ -182,7 +231,7 @@ int main(int argc, char const **argv)
                         printf("Sauvegarde...\n");
                         char titre[20];
                         sprintf(titre, "res%d.ppm", renderer.currentSample);
-                        savePPMP6(ecran.screen, ecran.l, ecran.L, titre);
+                        savePPMP6(ecran.screen, ecran.l, ecran.L, "rendusOnTheFlight", titre);
                         printf("Sauvé!\n");
                     }
                     else
