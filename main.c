@@ -34,8 +34,8 @@ int main(int argc, char const **argv)
 {
     // 64 36 -> 16/9
     Screen ecran = {
-        .l = 1920,
-        .L = 1080};
+        .l = 720,
+        .L = 480};
 
     Scene scene = {
         .sky = {0, 0.4, 0.7}}; // bleu clair {0, 0.5, 0.8}
