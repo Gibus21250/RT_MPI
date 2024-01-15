@@ -13,6 +13,7 @@
 #include "models/sphere.h"
 #include "models/tore.h"
 #include "models/plane.h"
+#include "models/cube.h"
 
 #include "animator/animator.h"
 
@@ -124,6 +125,7 @@ int main(int argc, char const *argv[])
 // ! ||--------------------------------------------------------------------------------||
 // ! ||                          INITIALISATION DES MATERIAUX                          ||
 // ! ||--------------------------------------------------------------------------------||
+    // On commence par initialiser les materiaux:
     Material matx = {
         .type = DIFFUSE,
         .albedo = {1, 0, 0},
@@ -207,22 +209,33 @@ int main(int argc, char const *argv[])
     Sphere x = {{1, 0.2, 0}, 0.2, imatx};
     Sphere y = {{0, 1.2, 0}, 0.2, imaty};
     Sphere z = {{0, 0.2, 1}, 0.2, imatz};
+
+    Cube c = {{1, 0, 1},{1.2, .2, 1.2}, imatblanc};
+
     Sphere centre = {{0, 0.2, 0}, 0.2, imatblanc};
 
     Sphere sol = {{0, -10, 0}, 10, imatmagenta};
     Sphere soleil = {{-20, 5, -20}, 20, imatsoleil};
 
-    Plane testplane = {{0, 0, 0}, {0, 1, 0},imatvertforet};
-
+    Plane testplane = {
+            {0, 0, 0},
+            {0, 1, 0},
+            imatmagenta
+        };
 // ! ||--------------------------------------------------------------------------------||
 // ! ||                         AJOUT DES MODELES DANS LA SCENE                        ||
 // ! ||--------------------------------------------------------------------------------||
 
+    // On ajoute les éléments dans la scène
     addModel(&scene, &x, SPHERE);
     addModel(&scene, &y, SPHERE);
     addModel(&scene, &z, SPHERE);
-    unsigned int centerId = addModel(&scene, &centre, SPHERE);
+    unsigned int centreId = addModel(&scene, &centre, SPHERE);
+
+    //addModel(&scene, &sol, SPHERE);
     addModel(&scene, &soleil, SPHERE);
+    addModel(&scene, &centre, SPHERE);
+    addModel(&scene, &c, CUBE);
 
     addModel(&scene, &testplane, PLANE);
 
@@ -233,7 +246,7 @@ int main(int argc, char const *argv[])
     Vector directionc = {1, 0, 1};
     normalize(&directionc);
     //On récupère le pointeur en mémoire depuis la scène
-    void *centerPointer = pointerFrom(&scene, SPHERE, centerId);
+    void *centerPointer = pointerFrom(&scene, SPHERE, centreId);
 
     addMovableElement(&animator, SPHERE, centerPointer, &directionc);
     

@@ -9,7 +9,7 @@
 
 typedef struct Screen
 {
-    unsigned int l, L;
+    unsigned int l, L; //Longueur, largeur
     Color *screen;
 } Screen;
 

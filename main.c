@@ -34,8 +34,8 @@ int main(int argc, char const **argv)
 {
     // 64 36 -> 16/9
     Screen ecran = {
-        .l = 720,
-        .L = 480};
+        .l = 1920,
+        .L = 1080};
 
     Scene scene = {
         .sky = {0, 0.4, 0.7}}; // bleu clair {0, 0.5, 0.8}
@@ -147,7 +147,7 @@ int main(int argc, char const **argv)
     Sphere y = {{0, 1.2, 0}, 0.2, imaty};
     Sphere z = {{0, 0.2, 1}, 0.2, imatz};
 
-    Cube c = {{1, 0, 1},{2, 1, 2},imatblanc};
+    Cube c = {{1, 0, 1},{1.2, .2, 1.2}, imatblanc};
 
     Sphere centre = {{0, 0.2, 0}, 0.2, imatblanc};
 
@@ -160,9 +160,10 @@ int main(int argc, char const **argv)
     addModel(&scene, &z, SPHERE);
     unsigned int centreI = addModel(&scene, &centre, SPHERE);
 
-    addModel(&scene, &sol, SPHERE);
+    //addModel(&scene, &sol, SPHERE);
     addModel(&scene, &soleil, SPHERE);
     addModel(&scene, &centre, SPHERE);
+    addModel(&scene, &c, CUBE);
 
     Tore test = {
         {1, .3, 1},
