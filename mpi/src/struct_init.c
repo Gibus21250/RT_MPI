@@ -11,6 +11,7 @@
 #include "screen/screen.h"
 #include "scene/scene.h"
 #include "scene/camera.h"
+#include "models/sphere.h"
 
 //Utils
 MPI_Datatype MPI_COLOR_STRUCT;

@@ -70,4 +70,4 @@ start: main.c
 	$(CC) $(CFLAGS) main.c -L$(CORE_BUILD_DIR) -L$(MPI_UTILS_BUILD_DIR) -lcore -lSDL2 -lm -o $(BIN_DIR)/start
 
 clean:
-	rm -rf $(CORE_BUILD_DIR)/**/*.o $(MPI_UTILS_BUILD_DIR)/**/*.o $(CORE_BUILD_DIR)/$(CORE_LIB_NAME) $(MPI_UTILS_BUILD_DIR)/$(MPI_UTILS_LIB_NAME) $(BIN_DIR)/start
+	rm -rf $(CORE_BUILD_DIR)/**/*.o $(MPI_UTILS_BUILD_DIR)/**/*.o $(CORE_BUILD_DIR)/$(CORE_LIB_NAME) $(MPI_UTILS_BUILD_DIR)/$(MPI_UTILS_LIB_NAME) $(BIN_DIR)/start $(BIN_DIR)/startmpi

@@ -17,6 +17,8 @@
 
 #include "animator/animator.h"
 
+#include <math.h>
+
 //MPI
 #include <mpi.h>
 
@@ -54,7 +56,11 @@ int main(int argc, char const *argv[])
     int timeAnimation = atoi(argv[4]);
     int nbTotalSample = atoi(argv[5]);
 
-    unsigned nbSamplePerProcess =  nbTotalSample / nbProcess;
+
+    unsigned nbSamplePerProcess =  ceil(((double) nbTotalSample) / nbProcess);
+    //Arrondir au dessus le nombre de sample, pour rester en multiple du nombre de processus
+    nbTotalSample = nbSamplePerProcess * nbProcess;
+
     double dt = 1./nbFPS;
     int nbImagesTotal = nbFPS * timeAnimation;
 
@@ -210,7 +216,7 @@ int main(int argc, char const *argv[])
     Sphere y = {{0, 1.2, 0}, 0.2, imaty};
     Sphere z = {{0, 0.2, 1}, 0.2, imatz};
 
-    Cube c = {{1, 0, 1},{1.2, .2, 1.2}, imatblanc};
+    //Cube c = {{1, 0, 1},{1.2, .2, 1.2}, imatblanc};
 
     Sphere centre = {{0, 0.2, 0}, 0.2, imatblanc};
 
@@ -235,7 +241,7 @@ int main(int argc, char const *argv[])
     //addModel(&scene, &sol, SPHERE);
     addModel(&scene, &soleil, SPHERE);
     addModel(&scene, &centre, SPHERE);
-    addModel(&scene, &c, CUBE);
+    //addModel(&scene, &c, CUBE);
 
     addModel(&scene, &testplane, PLANE);
 

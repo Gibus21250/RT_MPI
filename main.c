@@ -52,7 +52,7 @@ int main(int argc, char const **argv)
         .L = ecran.L,
         .maxSample = INT32_MAX,
         .currentSample = 0,
-        .maxBounces = 4};
+        .maxBounces = 64};
 
     Animator animator;
 
@@ -163,7 +163,7 @@ int main(int argc, char const **argv)
     //addModel(&scene, &sol, SPHERE);
     addModel(&scene, &soleil, SPHERE);
     addModel(&scene, &centre, SPHERE);
-    addModel(&scene, &c, CUBE);
+    //addModel(&scene, &c, CUBE);
 
     Tore test = {
         {1, .3, 1},
@@ -316,7 +316,7 @@ int main(int argc, char const **argv)
         clock_t start, end;
         double cpu_time_used;
         start = clock();
-        render(&renderer, &scene, &camera);
+        render(&renderer, &scene, &camera); //Lancer un rendu de la scène, accumulé dans renderer
         end = clock();
         // Calculez le temps passé en secondes
         cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
