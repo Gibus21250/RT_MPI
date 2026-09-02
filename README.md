@@ -1,6 +1,6 @@
 # Path Tracing distribué, méthode Monte Carlo
 
-Ce projet effectué en licence d'informatique a pour but d'implémenter un moteur de rendu de primitives mathématiques par lancé de rayon. Nous avons finalisé le projet en développant une méthode de rendu Path Tracing avec une méthode Monte Carlo. Chaque objet possède un matériau PBR simplifié. Il est également possible d'animer les objets.
+Ce projet effectué en Master d'informatique a pour but d'implémenter un moteur de rendu de primitives mathématiques par lancé de rayon. Nous avons finalisé le projet en développant une méthode de rendu Path Tracing avec une méthode Monte Carlo. Chaque objet possède un matériau PBR simplifié. Il est également possible d'animer les objets.
 
 # Scènes
 Les scènes sont implémentées dans l'exécutable. (cf `main.c` ou `mainmpi.c`)
